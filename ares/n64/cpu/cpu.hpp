@@ -651,6 +651,7 @@ struct CPU : Thread {
   auto fpeBegin() -> void;
   auto fpeEnd() -> void;
   auto fpeRaise() -> void;
+  auto fpeSyncGuestToHost() -> void;
 
   auto BC1(bool value, bool likely, s16 imm) -> void;
   auto CFC1(r64& rt, u8 rd) -> void;

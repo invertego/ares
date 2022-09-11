@@ -32,7 +32,9 @@ auto CPU::unload() -> void {
 
 auto CPU::main() -> void {
   instruction();
+  fpe::freeze();
   synchronize();
+  fpe::unfreeze();
 }
 
 auto CPU::step(u32 clocks) -> void {

@@ -21,7 +21,9 @@
  *     and there is no way to know which kind of exception was triggered.
  */
 
-#if defined(PLATFORM_WINDOWS)
+#if 1
+    #define FPE_HANDLER_TEST
+#elif defined(PLATFORM_WINDOWS)
   #if defined(COMPILER_GCC)
     #define FPE_HANDLER_VECTORED
   #else
@@ -46,7 +48,9 @@ namespace fpe {
   namespace internal {
     extern volatile int raised_mask;
     extern volatile int saved_mask;
-    
+    inline u32 saved_status;
+    inline u32 enable_mask;
+
     #if defined(FPE_HANDLER_SIGNAL_SJLJ)
     extern sigjmp_buf jmpbuf;
     #endif
@@ -55,13 +59,85 @@ namespace fpe {
     auto exceptionFilter(u32 code) -> int;
     auto NTAPI vectoredExceptionHandler(EXCEPTION_POINTERS* info) -> LONG;
     #endif
+
+    #if defined(ARCHITECTURE_AMD64)
+    namespace mxcsr {
+      inline auto read() -> u32 { return _mm_getcsr(); }
+      inline auto write(u32 value) -> void { _mm_setcsr(value); }
+    }
+    #endif
+
+    #if defined(ARCHITECTURE_ARM64)
+    namespace fpsr {
+      inline auto read() -> u32 {
+        u64 fpsr;
+        __asm__ __volatile__("mrs %0, FPSR" : "=r"(fpsr));
+        return fpsr;
+      }
+      inline auto write(u32 value) -> void {
+        u64 fpsr = value;
+        __asm__ __volatile__("msr FPSR, %0" : : "r"(fpsr));
+      }
+    }
+    #endif
   }
 
   auto install() -> void;
   auto uninstall() -> void;
   auto begin(int exc_mask) -> void;
   auto end(int exc_mask) -> void;
+
+  inline auto readStatus() -> u32 {
+    #if defined(ARCHITECTURE_AMD64)
+    return internal::mxcsr::read();
+    #elif defined(ARCHITECTURE_ARM64)
+    return internal::fpsr::read();
+    #else
+    #error Unimplemented architecture
+    #endif
+  }
+
+  inline auto writeStatus(u32 value) -> void {
+    #if defined(ARCHITECTURE_AMD64)
+    internal::mxcsr::write(value);
+    #elif defined(ARCHITECTURE_ARM64)
+    internal::fpsr::write(value);
+    #else
+    #error Unimplemented architecture
+    #endif
+  }
+
+  inline auto clearStatus() -> void {
+    writeStatus(readStatus() & ~FE_ALL_EXCEPT);
+  }
+
+  inline auto freeze() -> void {
+    #if defined(FPE_HANDLER_TEST)
+    internal::saved_status = readStatus();
+    #endif
+  }
+
+  inline auto unfreeze() -> void {
+    #if defined(FPE_HANDLER_TEST)
+    writeStatus(internal::saved_status);
+    #endif
+  }
 }
+
+#if defined(FPE_HANDLER_TEST)
+//#define CHECK_FPE(type, operation, exc_func) operation
+#define CHECK_FPE(type, operation, exc_func) ({ \
+  volatile type res = operation; \
+  u32 raised_mask = fpe::readStatus() & fpe::internal::enable_mask; \
+  if(raised_mask) { \
+    /*exc_func(raised_mask);*/ \
+    exception.floatingPoint(); \
+    return; \
+  } \
+  (res); \
+})
+#define GUARD_FPE(operation) operation
+#endif
 
 #if defined(FPE_HANDLER_SEH)
 #define CHECK_FPE(type, operation, exc_func) ({ \

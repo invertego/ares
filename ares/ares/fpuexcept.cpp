@@ -193,16 +193,23 @@ auto uninstall() -> void {
 }
 
 auto begin(int exc_mask) -> void {
+#if defined(FPE_HANDLER_TEST)
+    internal::enable_mask = exc_mask;
+    fpe::clearStatus();
+#else
     feenableexcept(exc_mask);
 #if !(defined(PLATFORM_MACOS) && defined(ARCHITECTURE_ARM64))
     // macOS/ARM64 seems to have a bug: if you disable the exception flags, 
     // exceptins don't trigger even if they are active (!).
     feclearexcept(FE_ALL_EXCEPT);
 #endif
+#endif
 }
 
 auto end(int exc_mask) -> void {
+#if !defined(FPE_HANDLER_TEST)
   fedisableexcept(exc_mask);
+#endif
 }
 
 }

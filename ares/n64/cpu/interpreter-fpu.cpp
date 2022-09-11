@@ -1,5 +1,26 @@
+auto CPU::fpeSyncGuestToHost() -> void {
+#if defined(FPE_HANDLER_TEST)
+  u32 status = fpe::readStatus();
+
+  #define update(x) { \
+    if(fpu.csr.enable.x)  \
+      fpu.csr.cause.x = 1; \
+    else \
+      fpu.csr.flag.x = 1; \
+  }
+
+  if(status & FE_INVALID)   update(invalidOperation);
+  if(status & FE_DIVBYZERO) update(divisionByZero);
+  if(status & FE_OVERFLOW)  update(overflow);
+  if(status & FE_UNDERFLOW) update(underflow);
+  if(status & FE_INEXACT)   update(inexact);
+
+  #undef update
+#endif
+}
+
 auto CPU::fpeBegin() -> void {
-    fpeEnd();
+    fpe::end(FE_ALL_EXCEPT);
     int exc_mask = 0;
     if(fpu.csr.enable.inexact)          exc_mask |= FE_INEXACT;
     if(fpu.csr.enable.underflow)        exc_mask |= FE_UNDERFLOW;
@@ -10,6 +31,7 @@ auto CPU::fpeBegin() -> void {
 }
 
 auto CPU::fpeEnd() -> void {
+    fpeSyncGuestToHost();
     fpe::end(FE_ALL_EXCEPT);
 }
 
@@ -73,6 +95,7 @@ auto CPU::getControlRegisterFPU(n5 index) -> u32 {
     data.bit(8,15) = fpu.coprocessor.implementation;
     break;
   case 31:  //control / status register
+    fpeSyncGuestToHost();
     data.bit( 0) = fpu.csr.roundMode.bit(0);
     data.bit( 1) = fpu.csr.roundMode.bit(1);
     data.bit( 2) = fpu.csr.flag.inexact;
@@ -137,12 +160,8 @@ auto CPU::setControlRegisterFPU(n5 index, n32 data) -> void {
       case 3: fesetround(FE_DOWNWARD);   break;
       }
     }
-    if(fpu.csr.enable.divisionByZero   != enablePrevious.divisionByZero ||
-       fpu.csr.enable.inexact          != enablePrevious.inexact ||
-       fpu.csr.enable.underflow        != enablePrevious.underflow ||
-       fpu.csr.enable.overflow         != enablePrevious.overflow ||
-       fpu.csr.enable.invalidOperation != enablePrevious.invalidOperation)
-     fpeBegin();
+
+    fpeBegin();
     fpeRaise();
   } break;
   }
