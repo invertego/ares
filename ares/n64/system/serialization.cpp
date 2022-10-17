@@ -35,6 +35,8 @@ auto System::unserialize(serializer& s) -> bool {
 }
 
 auto System::serialize(serializer& s, bool synchronize) -> void {
+  Thread::serialize(s);
+
   s(queue);
   s(cartridge);
   s(controllerPort1);

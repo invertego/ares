@@ -52,6 +52,25 @@ namespace ares::Nintendo64 {
     s64 clock;
   };
 
+  inline auto systemClock() -> s64;
+
+  template<typename T, s32 Divisor>
+  struct Counter {
+    auto reset() -> void {
+      clock = systemClock();
+    }
+
+    auto read() const -> T {
+      return (systemClock() - clock) / Divisor;
+    }
+
+    auto serialize(serializer& s) -> void {
+      s(clock);
+    }
+
+    s64 clock;
+  };
+
   struct Queue : priority_queue<u32[512]> {
     enum : u32 {
       RSP_DMA,
@@ -87,4 +106,6 @@ namespace ares::Nintendo64 {
   #include <n64/rdp/rdp.hpp>
   #include <n64/memory/bus.hpp>
   #include <n64/pi/bus.hpp>
+
+  auto systemClock() -> s64 { return system.clock + cpu.clock * 2; }
 }

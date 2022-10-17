@@ -151,6 +151,7 @@ auto System::power(bool reset) -> void {
   if constexpr(Accuracy::CPU::Recompiler || Accuracy::RSP::Recompiler) {
     ares::Memory::FixedAllocator::get().release();
   }
+  Thread::reset();
   queue.reset();
   cartridge.power(reset);
   rdram.power(reset);

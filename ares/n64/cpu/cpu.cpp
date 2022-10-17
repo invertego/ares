@@ -40,6 +40,7 @@ auto CPU::step(u32 clocks) -> void {
 auto CPU::synchronize() -> void {
   auto clocks = Thread::clock * 2;
   Thread::clock = 0;
+  system.clock += clocks;
 
    vi.clock -= clocks;
    ai.clock -= clocks;

@@ -77,7 +77,7 @@ struct RDP : Thread, Memory::IO<RDP> {
     n24 start;
     n24 end;
     n24 current;
-    n24 clock;
+    Counter<n24, 3> clock;
     n24 bufferBusy;
     n24 pipeBusy;
     n24 tmemBusy;

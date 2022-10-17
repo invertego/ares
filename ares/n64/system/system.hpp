@@ -1,4 +1,4 @@
-struct System {
+struct System : Thread {
   Node::System node;
   VFS::Pak pak;
 
