@@ -671,6 +671,8 @@ struct CPU : Thread {
   auto fpuClearCause() -> void;
   template<typename DST, typename SF>
   auto fpuCheckInputConv(SF& f) -> bool;
+  template<typename DST>
+  auto fpuCheckOutputConv(s64& s) -> bool;
 
   auto BC1(bool value, bool likely, s16 imm) -> void;
   auto CFC1(r64& rt, u8 rd) -> void;
