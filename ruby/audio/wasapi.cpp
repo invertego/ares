@@ -194,11 +194,20 @@ private:
     } else {
       WAVEFORMATEX* waveFormatEx = nullptr;
       if(LOG_HR(self.audioClient->GetMixFormat(&waveFormatEx)) != S_OK) return false;
+      FILE* log = fopen("wasapi.log", "a");
+      fprintf(log, "fmt ");
+      for(int i = 0; i < sizeof(WAVEFORMATEX) + waveFormatEx->cbSize; i++) fprintf(log, " %02x", ((u8*)waveFormatEx)[i]);
+      fprintf(log, "\n");
       waveFormat = *(WAVEFORMATEXTENSIBLE*)waveFormatEx;
       CoTaskMemFree(waveFormatEx);
       if(LOG_HR(self.audioClient->GetDevicePeriod(&self.devicePeriod, nullptr))) return false;
       auto latency = max(self.devicePeriod, (REFERENCE_TIME)self.latency * 10'000);  //1ms to 100ns units
       if(LOG_HR(self.audioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_EVENTCALLBACK, latency, 0, &waveFormat.Format, nullptr)) != S_OK) return false;
+      fprintf(log, "fmt ");
+      for(int i = 0; i < sizeof(WAVEFORMATEX) + waveFormat.Format.cbSize; i++) fprintf(log, " %02x", ((u8*)&waveFormat)[i]);
+      fprintf(log, "\n");
+      fflush(log);
+      fclose(log);
     }
 
     self.eventHandle = CreateEvent(nullptr, false, false, nullptr);
