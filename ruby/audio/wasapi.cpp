@@ -90,46 +90,39 @@ private:
     string name;
   };
   vector<Device> devices;
-  
-  #define LOG_HR(expr) (hr = (expr), fprintf(log, "%d %x\n", __LINE__, (unsigned)hr), fflush(log), hr)
-  FILE* log;
-  HRESULT hr;
 
   auto construct() -> bool {
-    log = fopen("wasapi.log", "a");
-    fprintf(log, "construct\n");
-    
-    if(LOG_HR(CoCreateInstance(CLSID_MMDeviceEnumerator, nullptr, CLSCTX_ALL, IID_IMMDeviceEnumerator, (void**)&self.enumerator)) != S_OK) return false;
+    if(CoCreateInstance(CLSID_MMDeviceEnumerator, nullptr, CLSCTX_ALL, IID_IMMDeviceEnumerator, (void**)&self.enumerator) != S_OK) return false;
 
     IMMDevice* defaultDeviceContext = nullptr;
-    if(LOG_HR(self.enumerator->GetDefaultAudioEndpoint(eRender, eConsole, &defaultDeviceContext)) != S_OK) return false;
+    if(self.enumerator->GetDefaultAudioEndpoint(eRender, eConsole, &defaultDeviceContext) != S_OK) return false;
 
     Device defaultDevice;
     LPWSTR defaultDeviceString = nullptr;
-    LOG_HR(defaultDeviceContext->GetId(&defaultDeviceString));
+    defaultDeviceContext->GetId(&defaultDeviceString);
     defaultDevice.id = (const char*)utf8_t(defaultDeviceString);
     CoTaskMemFree(defaultDeviceString);
 
     IMMDeviceCollection* deviceCollection = nullptr;
-    if(LOG_HR(self.enumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &deviceCollection)) != S_OK) return false;
+    if(self.enumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &deviceCollection) != S_OK) return false;
 
     u32 deviceCount = 0;
-    if(LOG_HR(deviceCollection->GetCount(&deviceCount)) != S_OK) return false;
+    if(deviceCollection->GetCount(&deviceCount) != S_OK) return false;
 
     for(u32 deviceIndex : range(deviceCount)) {
       IMMDevice* deviceContext = nullptr;
-      if(LOG_HR(deviceCollection->Item(deviceIndex, &deviceContext)) != S_OK) continue;
+      if(deviceCollection->Item(deviceIndex, &deviceContext) != S_OK) continue;
 
       Device device;
       LPWSTR deviceString = nullptr;
-      LOG_HR(deviceContext->GetId(&deviceString));
+      deviceContext->GetId(&deviceString);
       device.id = (const char*)utf8_t(deviceString);
       CoTaskMemFree(deviceString);
 
       IPropertyStore* propertyStore = nullptr;
-      LOG_HR(deviceContext->OpenPropertyStore(STGM_READ, &propertyStore));
+      deviceContext->OpenPropertyStore(STGM_READ, &propertyStore);
       PROPVARIANT propVariant;
-      LOG_HR(propertyStore->GetValue(PKEY_Device_FriendlyName, &propVariant));
+      propertyStore->GetValue(PKEY_Device_FriendlyName, &propVariant);
       device.name = (const char*)utf8_t(propVariant.pwszVal);
       propertyStore->Release();
 
@@ -145,8 +138,6 @@ private:
   }
 
   auto destruct() -> void {
-    fclose(log);
-
     terminate();
 
     if(self.enumerator) {
@@ -166,54 +157,53 @@ private:
     }
 
     utf16_t deviceString(deviceID);
-    if(LOG_HR(self.enumerator->GetDevice(deviceString, &self.audioDevice)) != S_OK) return false;
+    if(self.enumerator->GetDevice(deviceString, &self.audioDevice) != S_OK) return false;
 
-    if(LOG_HR(self.audioDevice->Activate(IID_IAudioClient, CLSCTX_ALL, nullptr, (void**)&self.audioClient)) != S_OK) return false;
+    if(self.audioDevice->Activate(IID_IAudioClient, CLSCTX_ALL, nullptr, (void**)&self.audioClient) != S_OK) return false;
 
     WAVEFORMATEXTENSIBLE waveFormat{};
     if(self.exclusive) {
       IPropertyStore* propertyStore = nullptr;
-      if(LOG_HR(self.audioDevice->OpenPropertyStore(STGM_READ, &propertyStore)) != S_OK) return false;
+      if(self.audioDevice->OpenPropertyStore(STGM_READ, &propertyStore) != S_OK) return false;
       PROPVARIANT propVariant;
-      if(LOG_HR(propertyStore->GetValue(PKEY_AudioEngine_DeviceFormat, &propVariant)) != S_OK) return false;
+      if(propertyStore->GetValue(PKEY_AudioEngine_DeviceFormat, &propVariant) != S_OK) return false;
       waveFormat = *(WAVEFORMATEXTENSIBLE*)propVariant.blob.pBlobData;
       propertyStore->Release();
-      if(LOG_HR(self.audioClient->GetDevicePeriod(nullptr, &self.devicePeriod)) != S_OK) return false;
+      if(self.audioClient->GetDevicePeriod(nullptr, &self.devicePeriod) != S_OK) return false;
       auto latency = max(self.devicePeriod, (REFERENCE_TIME)self.latency * 10'000);  //1ms to 100ns units
-      auto result = LOG_HR(self.audioClient->Initialize(AUDCLNT_SHAREMODE_EXCLUSIVE, AUDCLNT_STREAMFLAGS_EVENTCALLBACK, latency, latency, &waveFormat.Format, nullptr));
+      auto result = self.audioClient->Initialize(AUDCLNT_SHAREMODE_EXCLUSIVE, AUDCLNT_STREAMFLAGS_EVENTCALLBACK, latency, latency, &waveFormat.Format, nullptr);
       if(result == AUDCLNT_E_BUFFER_SIZE_NOT_ALIGNED) {
-        if(LOG_HR(self.audioClient->GetBufferSize(&self.bufferSize)) != S_OK) return false;
+        if(self.audioClient->GetBufferSize(&self.bufferSize) != S_OK) return false;
         self.audioClient->Release();
         latency = (REFERENCE_TIME)(10'000 * 1'000 * self.bufferSize / waveFormat.Format.nSamplesPerSec);
-        if(LOG_HR(self.audioDevice->Activate(IID_IAudioClient, CLSCTX_ALL, nullptr, (void**)&self.audioClient)) != S_OK) return false;
-        result = LOG_HR(self.audioClient->Initialize(AUDCLNT_SHAREMODE_EXCLUSIVE, AUDCLNT_STREAMFLAGS_EVENTCALLBACK, latency, latency, &waveFormat.Format, nullptr));
+        if(self.audioDevice->Activate(IID_IAudioClient, CLSCTX_ALL, nullptr, (void**)&self.audioClient) != S_OK) return false;
+        result = self.audioClient->Initialize(AUDCLNT_SHAREMODE_EXCLUSIVE, AUDCLNT_STREAMFLAGS_EVENTCALLBACK, latency, latency, &waveFormat.Format, nullptr);
       }
       if(result != S_OK) return false;
       DWORD taskIndex = 0;
       self.taskHandle = AvSetMmThreadCharacteristics(L"Pro Audio", &taskIndex);
     } else {
       WAVEFORMATEX* waveFormatEx = nullptr;
-      if(LOG_HR(self.audioClient->GetMixFormat(&waveFormatEx)) != S_OK) return false;
-      FILE* log = fopen("wasapi.log", "a");
-      fprintf(log, "fmt ");
+      if(self.audioClient->GetMixFormat(&waveFormatEx) != S_OK) return false;
+      FILE* log = fopen("wasapi.log", "w");
+      fprintf(log, "fmt1 ");
       for(int i = 0; i < sizeof(WAVEFORMATEX) + waveFormatEx->cbSize; i++) fprintf(log, " %02x", ((u8*)waveFormatEx)[i]);
       fprintf(log, "\n");
       waveFormat = *(WAVEFORMATEXTENSIBLE*)waveFormatEx;
       CoTaskMemFree(waveFormatEx);
-      if(LOG_HR(self.audioClient->GetDevicePeriod(&self.devicePeriod, nullptr))) return false;
+      if(self.audioClient->GetDevicePeriod(&self.devicePeriod, nullptr)) return false;
       auto latency = max(self.devicePeriod, (REFERENCE_TIME)self.latency * 10'000);  //1ms to 100ns units
-      if(LOG_HR(self.audioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_EVENTCALLBACK, latency, 0, &waveFormat.Format, nullptr)) != S_OK) return false;
-      fprintf(log, "fmt ");
+      if(self.audioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_EVENTCALLBACK, latency, 0, &waveFormat.Format, nullptr) != S_OK) return false;
+      fprintf(log, "fmt2 ");
       for(int i = 0; i < sizeof(WAVEFORMATEX) + waveFormat.Format.cbSize; i++) fprintf(log, " %02x", ((u8*)&waveFormat)[i]);
       fprintf(log, "\n");
-      fflush(log);
       fclose(log);
     }
 
     self.eventHandle = CreateEvent(nullptr, false, false, nullptr);
-    if(LOG_HR(self.audioClient->SetEventHandle(self.eventHandle)) != S_OK) return false;
-    if(LOG_HR(self.audioClient->GetService(IID_IAudioRenderClient, (void**)&self.renderClient)) != S_OK) return false;
-    if(LOG_HR(self.audioClient->GetBufferSize(&self.bufferSize)) != S_OK) return false;
+    if(self.audioClient->SetEventHandle(self.eventHandle) != S_OK) return false;
+    if(self.audioClient->GetService(IID_IAudioRenderClient, (void**)&self.renderClient) != S_OK) return false;
+    if(self.audioClient->GetBufferSize(&self.bufferSize) != S_OK) return false;
 
     self.channels = waveFormat.Format.nChannels;
     self.frequency = waveFormat.Format.nSamplesPerSec;
@@ -238,13 +228,13 @@ private:
     u32 available = self.bufferSize;
     if(!self.exclusive) {
       u32 padding = 0;
-      LOG_HR(self.audioClient->GetCurrentPadding(&padding));
+      self.audioClient->GetCurrentPadding(&padding);
       available = self.bufferSize - padding;
     }
     u32 length = min(available, self.queue.count);
 
     u8* buffer = nullptr;
-    if(LOG_HR(self.renderClient->GetBuffer(length, &buffer)) == S_OK) {
+    if(self.renderClient->GetBuffer(length, &buffer) == S_OK) {
       u32 bufferFlags = 0;
       for(u32 _ : range(length)) {
         f64 samples[8] = {};
@@ -274,7 +264,7 @@ private:
           break;
         }
       }
-      LOG_HR(self.renderClient->ReleaseBuffer(length, bufferFlags));
+      self.renderClient->ReleaseBuffer(length, bufferFlags);
     }
   }
 
