@@ -1,7 +1,7 @@
 name: Build
 on:
   push:
-    branches: [ master ]
+    branches: [ '*' ]
     tags: [ 'v*' ]
   pull_request:
     branches: [ master ]
@@ -50,10 +50,10 @@ jobs:
           windres: rc
           shell: bash
           msvc-arch: x64_arm64
-        - name: macos
-          os: macos-latest
-          compiler: clang++
-          shell: sh
+#        - name: macos
+#          os: macos-latest
+#          compiler: clang++
+#          shell: sh
         - name: ubuntu
           os: ubuntu-latest
           compiler: g++

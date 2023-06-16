@@ -204,9 +204,7 @@ namespace nall {
   };
 #elif defined(__aarch64__) || defined(_M_ARM64)
   #define ARCHITECTURE_ARM64
-  #if !defined(COMPILER_MICROSOFT)
-    #define ARCHITECTURE_SUPPORTS_SSE4_1 1 // simulated via sse2neon.h
-  #endif
+  #define ARCHITECTURE_SUPPORTS_SSE4_1 1 // simulated via sse2neon.h
   struct Architecture {
     static constexpr bool x86   = 0;
     static constexpr bool amd64 = 0;
