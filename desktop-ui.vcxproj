@@ -90,14 +90,15 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <WarningLevel>Level2</WarningLevel>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>MIA_LIBRARY;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;SUBSYTEM_WINDOWS;SLJIT_HAVE_CONFIG_PRE=1;SLJIT_HAVE_CONFIG_POST=1;_7ZIP_ST;MAME_RDP;LSB_FIRST;PTR64;OSD_WINDOWS=1;VULKAN;VK_USE_PLATFORM_WIN32_KHR;PROFILE_PERFORMANCE;CORE_A26;CORE_FC;CORE_SFC;CORE_N64;CORE_SG;CORE_MS;CORE_MD;CORE_PS1;CORE_PCE;CORE_NG;CORE_MSX;CORE_CV;CORE_GB;CORE_GBA;CORE_WS;CORE_NGP;CORE_SPEC;HIRO_WINDOWS;VIDEO_DIRECT3D9;VIDEO_GDI;VIDEO_WGL;AUDIO_WASAPI;AUDIO_XAUDIO2;AUDIO_DIRECTSOUND;AUDIO_WAVEOUT;INPUT_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>false</ConformanceMode>
-      <AdditionalIncludeDirectories>.;ares;thirdparty;thirdparty\libchdr\include;thirdparty\libchdr\deps\lzma-19.00\include;thirdparty\libchdr\deps\zlib-1.2.11;thirdparty\mame\devices;thirdparty\mame\emu;thirdparty\mame\lib\util;thirdparty\mame\mame;thirdparty\mame\osd;ares\n64\vulkan\parallel-rdp\parallel-rdp;ares\n64\vulkan\parallel-rdp\volk;ares\n64\vulkan\parallel-rdp\vulkan;ares\n64\vulkan\parallel-rdp\vulkan-headers\include;ares\n64\vulkan\parallel-rdp\util;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>MIA_LIBRARY;_WIN32_WINNT=0x0601;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;SUBSYTEM_WINDOWS;SLJIT_HAVE_CONFIG_PRE=1;SLJIT_HAVE_CONFIG_POST=1;_7ZIP_ST;Z7_ST;ZSTD_DISABLE_ASM;VULKAN;VK_USE_PLATFORM_WIN32_KHR;PROFILE_PERFORMANCE;CORE_A26;CORE_FC;CORE_SFC;CORE_N64;CORE_SG;CORE_MS;CORE_MD;CORE_PS1;CORE_PCE;CORE_NG;CORE_MSX;CORE_CV;CORE_MYVISION;CORE_GB;CORE_GBA;CORE_WS;CORE_NGP;CORE_SPEC;HIRO_WINDOWS;VIDEO_DIRECT3D9;VIDEO_GDI;VIDEO_WGL;AUDIO_WASAPI;AUDIO_XAUDIO2;AUDIO_DIRECTSOUND;AUDIO_WAVEOUT;INPUT_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>.;ares;thirdparty;thirdparty\libchdr\include;thirdparty\libchdr\deps\lzma-24.05\include;thirdparty\libchdr\deps\zlib-1.3.1;thirdparty\libchdr\deps\zstd-1.5.6\lib;thirdparty\librashader\include;thirdparty\TZXFile;thirdparty\ymfm\src;ares\n64\vulkan\parallel-rdp\parallel-rdp;ares\n64\vulkan\parallel-rdp\volk;ares\n64\vulkan\parallel-rdp\vulkan;ares\n64\vulkan\parallel-rdp\vulkan-headers\include;ares\n64\vulkan\parallel-rdp\util;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -165,10 +166,11 @@
     <ClCompile Include="ares\component\audio\t6w28\t6w28.cpp" />
     <ClCompile Include="ares\component\audio\ym2149\ym2149.cpp" />
     <ClCompile Include="ares\component\audio\ym2413\ym2413.cpp" />
-    <ClCompile Include="ares\component\audio\ym2610\ym2610.cpp" />
     <ClCompile Include="ares\component\audio\ym2612\ym2612.cpp" />
     <ClCompile Include="ares\component\eeprom\m24c\m24c.cpp" />
     <ClCompile Include="ares\component\eeprom\m93lcx6\m93lcx6.cpp" />
+    <ClCompile Include="ares\component\flash\sst39sf0x0\sst39sf0x0.cpp" />
+    <ClCompile Include="ares\component\io\i8255\i8255.cpp" />
     <ClCompile Include="ares\component\processor\arm7tdmi\arm7tdmi.cpp" />
     <ClCompile Include="ares\component\processor\gsu\gsu.cpp" />
     <ClCompile Include="ares\component\processor\hg51b\hg51b.cpp" />
@@ -238,8 +240,15 @@
     <ClCompile Include="ares\msx\cpu\cpu.cpp" />
     <ClCompile Include="ares\msx\keyboard\keyboard.cpp" />
     <ClCompile Include="ares\msx\psg\psg.cpp" />
+    <ClCompile Include="ares\msx\rtc\rtc.cpp" />
     <ClCompile Include="ares\msx\system\system.cpp" />
+    <ClCompile Include="ares\msx\tape\tape.cpp" />
     <ClCompile Include="ares\msx\vdp\vdp.cpp" />
+    <ClCompile Include="ares\myvision\cartridge\cartridge.cpp" />
+    <ClCompile Include="ares\myvision\cpu\cpu.cpp" />
+    <ClCompile Include="ares\myvision\psg\psg.cpp" />
+    <ClCompile Include="ares\myvision\system\system.cpp" />
+    <ClCompile Include="ares\myvision\vdp\vdp.cpp" />
     <ClCompile Include="ares\n64\ai\ai.cpp" />
     <ClCompile Include="ares\n64\cartridge\cartridge.cpp" />
     <ClCompile Include="ares\n64\cic\cic.cpp" />
@@ -264,6 +273,7 @@
     <ClCompile Include="ares\n64\vulkan\parallel-rdp\parallel-rdp\video_interface.cpp" />
     <ClCompile Include="ares\n64\vulkan\parallel-rdp\util\aligned_alloc.cpp" />
     <ClCompile Include="ares\n64\vulkan\parallel-rdp\util\arena_allocator.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\util\environment.cpp" />
     <ClCompile Include="ares\n64\vulkan\parallel-rdp\util\logging.cpp" />
     <ClCompile Include="ares\n64\vulkan\parallel-rdp\util\thread_id.cpp" />
     <ClCompile Include="ares\n64\vulkan\parallel-rdp\util\thread_name.cpp" />
@@ -282,6 +292,7 @@
     <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\fence_manager.cpp" />
     <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\fence.cpp" />
     <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\image.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\indirect_layout.cpp" />
     <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\memory_allocator.cpp" />
     <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\pipeline_event.cpp" />
     <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\query_pool.cpp" />
@@ -290,7 +301,7 @@
     <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\semaphore_manager.cpp" />
     <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\semaphore.cpp" />
     <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\shader.cpp" />
-    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\texture_format.cpp" />
+    <ClCompile Include="ares\n64\vulkan\parallel-rdp\vulkan\texture\texture_format.cpp" />
     <ClCompile Include="ares\n64\vulkan\vulkan.cpp" />
     <ClCompile Include="ares\ng\apu\apu.cpp" />
     <ClCompile Include="ares\ng\card\card.cpp" />
@@ -340,6 +351,7 @@
     <ClCompile Include="ares\sg\cartridge\cartridge.cpp" />
     <ClCompile Include="ares\sg\controller\controller.cpp" />
     <ClCompile Include="ares\sg\cpu\cpu.cpp" />
+    <ClCompile Include="ares\sg\ppi\ppi.cpp" />
     <ClCompile Include="ares\sg\psg\psg.cpp" />
     <ClCompile Include="ares\sg\system\system.cpp" />
     <ClCompile Include="ares\sg\vdp\vdp.cpp" />
@@ -362,48 +374,80 @@
     <ClCompile Include="libco\libco.c" />
     <ClCompile Include="mia\mia.cpp" />
     <ClCompile Include="mia\resource\resource.cpp" />
+    <ClCompile Include="nall\main.cpp" />
     <ClCompile Include="nall\nall.cpp" />
     <ClCompile Include="ruby\ruby.cpp" />
-    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\Alloc.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\Bra86.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\BraIA64.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\CpuArch.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\Delta.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\LzFind.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\Lzma86Dec.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\LzmaDec.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\LzmaEnc.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\lzma-19.00\src\Sort.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\adler32.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\compress.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\crc32.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\deflate.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\infback.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\inffast.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\inflate.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\inftrees.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\trees.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\uncompr.c" />
-    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.2.11\zutil.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-24.05\src\Alloc.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-24.05\src\Bra86.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-24.05\src\BraIA64.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-24.05\src\CpuArch.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-24.05\src\Delta.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-24.05\src\LzFind.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-24.05\src\Lzma86Dec.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-24.05\src\LzmaDec.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-24.05\src\LzmaEnc.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\lzma-24.05\src\Sort.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.3.1\adler32.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.3.1\compress.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.3.1\crc32.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.3.1\deflate.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.3.1\infback.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.3.1\inffast.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.3.1\inflate.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.3.1\inftrees.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.3.1\trees.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.3.1\uncompr.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zlib-1.3.1\zutil.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zstd-1.5.6\lib\common\debug.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zstd-1.5.6\lib\common\entropy_common.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zstd-1.5.6\lib\common\error_private.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zstd-1.5.6\lib\common\fse_decompress.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zstd-1.5.6\lib\common\pool.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zstd-1.5.6\lib\common\threading.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zstd-1.5.6\lib\common\xxhash.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zstd-1.5.6\lib\common\zstd_common.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zstd-1.5.6\lib\decompress\huf_decompress.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zstd-1.5.6\lib\decompress\zstd_ddict.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zstd-1.5.6\lib\decompress\zstd_decompress.c" />
+    <ClCompile Include="thirdparty\libchdr\deps\zstd-1.5.6\lib\decompress\zstd_decompress_block.c" />
     <ClCompile Include="thirdparty\libchdr\src\libchdr_bitstream.c" />
     <ClCompile Include="thirdparty\libchdr\src\libchdr_cdrom.c" />
     <ClCompile Include="thirdparty\libchdr\src\libchdr_chd.c" />
     <ClCompile Include="thirdparty\libchdr\src\libchdr_flac.c" />
     <ClCompile Include="thirdparty\libchdr\src\libchdr_huffman.c" />
-    <ClCompile Include="thirdparty\mame\emu\emucore.cpp" />
-    <ClCompile Include="thirdparty\mame\emu\video\rgbutil.cpp" />
-    <ClCompile Include="thirdparty\mame\lib\util\delegate.cpp" />
-    <ClCompile Include="thirdparty\mame\lib\util\strformat.cpp" />
-    <ClCompile Include="thirdparty\mame\mame\video\n64.cpp" />
-    <ClCompile Include="thirdparty\mame\mame\video\pin64.cpp" />
-    <ClCompile Include="thirdparty\mame\mame\video\rdpblend.cpp" />
-    <ClCompile Include="thirdparty\mame\mame\video\rdptpipe.cpp" />
-    <ClCompile Include="thirdparty\mame\osd\osdcore.cpp" />
-    <ClCompile Include="thirdparty\mame\osd\osdsync.cpp" />
     <ClCompile Include="thirdparty\sljit\sljit_src\sljitLir.c" />
     <ClCompile Include="thirdparty\sljitAllocator.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXAudioGenerator.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXBlock.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXBlockArchiveInfo.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXBlockCustomInfo.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXBlockGroupEnd.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXBlockGroupStart.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXBlockHardwareType.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXBlockLoopEnd.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXBlockLoopStart.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXBlockMessage.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXBlockPause.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXBlockPulseSequence.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXBlockPureData.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXBlockPureTone.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXBlockStandardSpeedData.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXBlockStopTheTape48K.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXBlockTextDescription.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXBlockTurboSpeedData.cpp" />
+    <ClCompile Include="thirdparty\TZXFile\TZXFile.cpp" />
+    <ClCompile Include="thirdparty\ymfm\src\ymfm_adpcm.cpp" />
+    <ClCompile Include="thirdparty\ymfm\src\ymfm_misc.cpp" />
+    <ClCompile Include="thirdparty\ymfm\src\ymfm_opl.cpp" />
+    <ClCompile Include="thirdparty\ymfm\src\ymfm_opm.cpp" />
+    <ClCompile Include="thirdparty\ymfm\src\ymfm_opn.cpp" />
+    <ClCompile Include="thirdparty\ymfm\src\ymfm_opq.cpp" />
+    <ClCompile Include="thirdparty\ymfm\src\ymfm_opz.cpp" />
+    <ClCompile Include="thirdparty\ymfm\src\ymfm_pcm.cpp" />
+    <ClCompile Include="thirdparty\ymfm\src\ymfm_ssg.cpp" />
     <ClCompile Include="desktop-ui\desktop-ui.cpp" />
     <ClCompile Include="desktop-ui\emulator\emulator.cpp" />
+    <ClCompile Include="desktop-ui\game-browser\game-browser.cpp" />
     <ClCompile Include="desktop-ui\input\input.cpp" />
     <ClCompile Include="desktop-ui\presentation\presentation.cpp" />
     <ClCompile Include="desktop-ui\program\program.cpp" />
