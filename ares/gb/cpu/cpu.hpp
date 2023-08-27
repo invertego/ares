@@ -143,6 +143,16 @@ struct CPU : SM83, Thread {
     //$ffff  IE
     n8 interruptEnable;
   } status;
+
+  shared_memory shared;
+  struct SharedData {
+    atomic<u32> pid[2];
+    atomic<u32> cycle[2];
+    atomic<u32> serialData[2];
+    atomic<u32> serialControl[2];
+    atomic<u32> serialBits[2];
+  } *sharedData = nullptr;
+  s32 sharedIndex = -1;
 };
 
 extern CPU cpu;

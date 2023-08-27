@@ -26,6 +26,7 @@
   //#include <nall/windows/guid.cpp>
   //#include <nall/windows/launcher.cpp>
   #include <nall/windows/registry.cpp>
+  #include <nall/windows/shared-memory.cpp>
   #include <nall/windows/utf8.cpp>
 #endif
 

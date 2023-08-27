@@ -11,17 +11,27 @@ struct shared_memory {
     reset();
   }
 
-  explicit operator bool() const { return false; }
-  auto empty() const -> bool { return true; }
-  auto size() const -> u32 { return 0; }
+  explicit operator bool() const { return _data; }
+  auto size() const -> u32 { return _size; }
   auto acquired() const -> bool { return false; }
-  auto acquire() -> u8* { return nullptr; }
+  auto acquire() -> u8* { return _data; }
   auto release() -> void {}
-  auto reset() -> void {}
-  auto create(const string& name, u32 size) -> bool { return false; }
-  auto remove() -> void {}
-  auto open(const string& name, u32 size) -> bool { return false; }
-  auto close() -> void {}
+  auto reset() -> void;
+  auto create(const string& name, u32 size) -> bool;
+  auto remove() -> void { reset(); }
+  auto open(const string& name, u32 size) -> bool;
+  auto close() -> void { reset(); }
+
+  static auto pid() -> u32;
+
+private:
+  HANDLE _map = nullptr;
+  u8* _data = nullptr;
+  u32 _size = 0;
 };
 
 }
+
+#if defined(NALL_HEADER_ONLY)
+  #include <nall/windows/shared-memory.cpp>
+#endif

@@ -53,6 +53,39 @@ auto CPU::timer16384hz() -> void {
 }
 
 auto CPU::timer8192hz() -> void {
+  if(sharedData && sharedIndex >= 0) {
+    u32 cycle, other, otherIndex = sharedIndex ^ 1;
+    
+    sharedData->serialData[sharedIndex] = status.serialData;
+    sharedData->serialBits[sharedIndex] = status.serialBits;
+    sharedData->serialControl[sharedIndex] = status.serialTransfer << 7 | status.serialClock;
+
+    cycle = ++sharedData->cycle[sharedIndex];
+    while((other = sharedData->cycle[otherIndex]) < cycle) spinloop();
+
+    u8 otherData = sharedData->serialData[otherIndex];
+    u8 otherControl = sharedData->serialControl[otherIndex];
+    u8 otherBits = sharedData->serialBits[otherIndex];
+
+    if(status.serialTransfer && status.serialClock || (otherControl == 0x81)) {
+      if(status.serialTransfer && status.serialClock && (otherControl == 0x81)) otherData = 0xff;
+      status.serialData <<= 1;
+      status.serialData |= otherData >> 7;
+
+      if(!status.serialClock) status.serialBits = otherBits;
+
+      if(--status.serialBits == 0) {
+        status.serialTransfer = 0;
+        raise(Interrupt::Serial);
+      }
+    }
+
+    cycle = ++sharedData->cycle[sharedIndex];
+    while((other = sharedData->cycle[otherIndex]) < cycle) spinloop();
+
+    return;
+  }
+
   if(status.serialTransfer && status.serialClock) {
     status.serialData <<= 1;
     status.serialData |= 1;

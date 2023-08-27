@@ -50,9 +50,32 @@ auto CPU::load(Node::Object parent) -> void {
   }
 
   debugger.load(node);
+
+  shared.create("ares-gb-cpu", 1_KiB);
+  sharedData = (SharedData*)shared.acquire();
+  shared.release();
+
+  auto pid = shared_memory::pid();
+  u32 pid0 = 0, pid1 = 0;
+  if(sharedData->pid[0].compare_exchange_strong(pid0, pid)) {
+    print("we are first\n");
+    sharedIndex = 0;
+    sharedData->cycle[sharedIndex] = 0;
+  } else if(sharedData->pid[1].compare_exchange_strong(pid1, pid)) {
+    print("we are second\n");
+    sharedIndex = 1;
+    sharedData->cycle[sharedIndex] = 0;
+  }
 }
 
 auto CPU::unload() -> void {
+  if(sharedData && sharedIndex >= 0) {
+    sharedData->pid[sharedIndex] = 0;
+  }
+  sharedData = nullptr;
+  sharedIndex = -1;
+  shared.reset();
+
   wram.reset();
   hram.reset();
   node = {};

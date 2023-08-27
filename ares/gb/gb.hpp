@@ -2,6 +2,7 @@
 //started: 2010-12-27
 
 #include <ares/ares.hpp>
+#include <nall/shared-memory.hpp>
 #include <component/processor/sm83/sm83.hpp>
 #include <component/eeprom/m93lcx6/m93lcx6.hpp>
 
