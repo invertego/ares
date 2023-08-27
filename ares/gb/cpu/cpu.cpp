@@ -145,6 +145,7 @@ auto CPU::stoppable() -> bool {
     status.speedDouble ^= 1;
     if(status.speedDouble == 0) setFrequency(4 * 1024 * 1024);
     if(status.speedDouble == 1) setFrequency(8 * 1024 * 1024);
+    print("status.speedDouble = ", status.speedDouble, "\n");
     return false;
   }
 

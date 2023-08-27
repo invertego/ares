@@ -74,6 +74,7 @@ struct CPU : SM83, Thread {
   auto timer1024hz() -> void;
   auto hblank() -> void;
   auto hblankTrigger() -> void;
+  auto serial() -> void;
   
   struct Status {
     n22 clock;
@@ -92,6 +93,7 @@ struct CPU : SM83, Thread {
     //$ff02  SC
     n1 serialClock;
     n1 serialSpeed;
+    n1 serialSpeedPrev;
     n1 serialTransfer;
 
     //$ff04  DIV

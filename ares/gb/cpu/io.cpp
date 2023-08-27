@@ -176,6 +176,10 @@ auto CPU::writeIO(u32 cycle, n16 address, n8 data) -> void {
   if(address == 0xff02 && cycle == 2) {  //SC
     status.serialClock    = data.bit(0);
     status.serialSpeed    = data.bit(1) & Model::GameBoyColor();
+    if(status.serialSpeedPrev != status.serialSpeed) {
+      status.serialSpeedPrev = status.serialSpeed;
+      print("status.serialSpeed = ", status.serialSpeed, "\n");
+    }
     status.serialTransfer = data.bit(7);
     if(status.serialTransfer) status.serialBits = 8;
     return;

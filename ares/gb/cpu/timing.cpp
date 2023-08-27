@@ -32,6 +32,8 @@ auto CPU::timer262144hz() -> void {
       raise(Interrupt::Timer);
     }
   }
+
+  if(status.serialSpeed) serial();
 }
 
 auto CPU::timer65536hz() -> void {
@@ -53,15 +55,20 @@ auto CPU::timer16384hz() -> void {
 }
 
 auto CPU::timer8192hz() -> void {
+  if(!status.serialSpeed) serial();
+}
+
+auto CPU::serial() -> void {
   if(sharedData && sharedIndex >= 0) {
-    u32 cycle, other, otherIndex = sharedIndex ^ 1;
+    u32 cycle, otherIndex = sharedIndex ^ 1;
+    u32 step = status.serialSpeed ? 1 : 32;
     
     sharedData->serialData[sharedIndex] = status.serialData;
     sharedData->serialBits[sharedIndex] = status.serialBits;
     sharedData->serialControl[sharedIndex] = status.serialTransfer << 7 | status.serialClock;
 
-    cycle = ++sharedData->cycle[sharedIndex];
-    while((other = sharedData->cycle[otherIndex]) < cycle) spinloop();
+    cycle = sharedData->cycle[sharedIndex] = (sharedData->cycle[sharedIndex] + step) & ~(step - 1);
+    while(s32(cycle - sharedData->cycle[otherIndex]) > 0) spinloop();
 
     u8 otherData = sharedData->serialData[otherIndex];
     u8 otherControl = sharedData->serialControl[otherIndex];
@@ -80,8 +87,8 @@ auto CPU::timer8192hz() -> void {
       }
     }
 
-    cycle = ++sharedData->cycle[sharedIndex];
-    while((other = sharedData->cycle[otherIndex]) < cycle) spinloop();
+    cycle = sharedData->cycle[sharedIndex] = (sharedData->cycle[sharedIndex] + step) & ~(step - 1);
+    while(s32(cycle - sharedData->cycle[otherIndex]) > 0) spinloop();
 
     return;
   }
