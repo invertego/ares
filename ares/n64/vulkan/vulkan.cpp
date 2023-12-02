@@ -54,13 +54,13 @@ auto Vulkan::load(Node::Object) -> bool {
     }
 
     if (!implementation) {
-      platform->status("Vulkan init failed: No RDP rendering support");
+      platform->status("Vulkan init failed, falling back to MAME RDP");
       vulkan.enable = false;
     } else {
       platform->status("Vulkan Enabled: using paraLLEl-RDP");
     }
   } else {
-    platform->status("Vulkan Disabled: No RDP rendering support");
+    platform->status("Vulkan Disabled: using MAME RDP");
   }
 
   return true;

@@ -74,6 +74,7 @@ auto Settings::process(bool load) -> void {
   bind(boolean, "Video/PixelAccuracy", video.pixelAccuracy);
   bind(string,  "Video/Quality", video.quality);
   bind(boolean, "Video/Supersampling", video.supersampling);
+  bind(boolean, "Video/EnableVulkan", video.enableVulkan);
   bind(boolean, "Video/DisableVideoInterfaceProcessing", video.disableVideoInterfaceProcessing);
   bind(boolean, "Video/WeaveDeinterlacing", video.weaveDeinterlacing);
 

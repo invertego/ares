@@ -23,6 +23,10 @@ using v128 = __m128i;
   #include <n64/vulkan/vulkan.hpp>
 #endif
 
+#if defined(MAME_RDP)
+class n64_state;
+#endif
+
 // Include the GB core, we can use its cartridge emulation for Transfer Pak
 #if defined(CORE_GB)
 #include <gb/gb.hpp>
