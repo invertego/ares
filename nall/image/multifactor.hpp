@@ -20,7 +20,7 @@ inline multiFactorImage::multiFactorImage(const image& source) {
 }
 
 inline multiFactorImage::multiFactorImage(image&& source) {
-    operator=(std::forward<multiFactorImage>(source));
+    operator=(std::forward<multiFactorImage>(dynamic_cast<multiFactorImage&&>(source)));
 }
 
 inline multiFactorImage::multiFactorImage() {

@@ -50,7 +50,7 @@ struct image {
   image(const vector<u8>& buffer);
   template<u32 Size> image(const u8 (&Name)[Size]);
   image();
-  ~image();
+  virtual ~image();
 
   auto operator=(const image& source) -> image&;
   auto operator=(image&& source) -> image&;
