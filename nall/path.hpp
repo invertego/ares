@@ -17,7 +17,7 @@ inline auto active() -> string {
 inline auto real(string_view name) -> string {
   string result;
   char path[PATH_MAX] = "";
-  if(::realpath(name, path)) result = Location::path(string{path}.transform("\\", "/"));
+  if(::realpath(name.data(), path)) result = Location::path(string{path}.transform("\\", "/"));
   if(!result) return active();
   result.transform("\\", "/");
   if(!result.endsWith("/")) result.append("/");

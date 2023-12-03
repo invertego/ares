@@ -10,7 +10,7 @@ MouseCursor::MouseCursor(const string& name) {
 }
 
 MouseCursor::operator bool() const {
-  return state.name;
+  return (bool)state.name;
 }
 
 auto MouseCursor::operator==(const MouseCursor& source) const -> bool {

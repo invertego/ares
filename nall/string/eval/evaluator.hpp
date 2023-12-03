@@ -37,7 +37,7 @@ inline auto evaluateExpression(Node* node) -> string {
 }
 
 inline auto evaluateInteger(Node* node) -> s64 {
-  if(node->type == Node::Type::Literal) return toInteger(node->literal);
+  if(node->type == Node::Type::Literal) return node->literal.integer();
 
   #define p(n) evaluateInteger(node->link[n])
   switch(node->type) {
@@ -88,7 +88,7 @@ inline auto evaluateInteger(Node* node) -> s64 {
 inline auto integer(const string& expression) -> maybe<s64> {
   try {
     auto tree = new Node;
-    const char* p = expression;
+    const char* p{expression};
     parse(tree, p, 0);
     auto result = evaluateInteger(tree);
     delete tree;
@@ -99,7 +99,7 @@ inline auto integer(const string& expression) -> maybe<s64> {
 }
 
 inline auto evaluateReal(Node* node) -> f64 {
-  if(node->type == Node::Type::Literal) return toReal(node->literal);
+  if(node->type == Node::Type::Literal) return node->literal.real();
 
   #define p(n) evaluateReal(node->link[n])
   switch(node->type) {
@@ -133,7 +133,7 @@ inline auto evaluateReal(Node* node) -> f64 {
 inline auto real(const string& expression) -> maybe<f64> {
   try {
     auto tree = new Node;
-    const char* p = expression;
+    const char* p{expression};
     parse(tree, p, 0);
     auto result = evaluateReal(tree);
     delete tree;

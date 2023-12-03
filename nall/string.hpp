@@ -49,12 +49,14 @@ struct string_view {
   auto operator!=(const char* source) const -> bool { return strcmp(data(), source) != 0; }
 
   explicit operator bool() const;
-  operator const char*() const;
+  explicit operator const char*() const;
   auto data() const -> const char*;
   auto size() const -> u32;
 
   auto begin() const { return &_data[0]; }
   auto end() const { return &_data[size()]; }
+
+  auto operator[](u32) const -> const char&;
 
 protected:
   string* _string;
@@ -158,7 +160,7 @@ public:
   ~string() { reset(); }
 
   explicit operator bool() const { return _size; }
-  operator const char*() const { return (const char*)data(); }
+  explicit operator const char*() const { return (const char*)data(); }
   operator array_span<char>() { return {(char*)get(), size()}; }
   operator array_view<char>() const { return {(const char*)data(), size()}; }
   operator array_span<u8>() { return {(u8*)get(), size()}; }

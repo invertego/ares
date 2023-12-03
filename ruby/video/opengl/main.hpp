@@ -32,11 +32,11 @@ auto OpenGL::setShader(const string& pathname) -> void {
     for(auto node : document["output"]) {
       string text = node.text();
       if(node.name() == "width") {
-        if(text.endsWith("%")) relativeWidth = toReal(text.trimRight("%", 1L)) / 100.0;
+        if(text.endsWith("%")) relativeWidth = text.trimRight("%", 1L).real() / 100.0;
         else absoluteWidth = text.natural();
       }
       if(node.name() == "height") {
-        if(text.endsWith("%")) relativeHeight = toReal(text.trimRight("%", 1L)) / 100.0;
+        if(text.endsWith("%")) relativeHeight = text.trimRight("%", 1L).real() / 100.0;
         else absoluteHeight = text.natural();
       }
     }
@@ -194,9 +194,9 @@ auto OpenGL::initialize(const string& shader) -> bool {
   glEnable(GL_DITHER);
 
   program = glCreateProgram();
-  vertex = glrCreateShader(program, GL_VERTEX_SHADER, OpenGLOutputVertexShader);
-//geometry = glrCreateShader(program, GL_GEOMETRY_SHADER, OpenGLGeometryShader);
-  fragment = glrCreateShader(program, GL_FRAGMENT_SHADER, OpenGLFragmentShader);
+  vertex = glrCreateShader(program, GL_VERTEX_SHADER, OpenGLOutputVertexShader.data());
+//geometry = glrCreateShader(program, GL_GEOMETRY_SHADER, OpenGLGeometryShader.data());
+  fragment = glrCreateShader(program, GL_FRAGMENT_SHADER, OpenGLFragmentShader.data());
   OpenGLSurface::allocate();
   glrLinkProgram(program);
 

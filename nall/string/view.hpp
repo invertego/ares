@@ -89,4 +89,12 @@ inline auto string_view::size() const -> u32 {
   return _size;
 }
 
+inline auto string_view::operator[](u32 position) const -> const char& {
+  #ifdef DEBUG
+  struct out_of_bounds {};
+  if(position >= size() + 1) throw out_of_bounds{};
+  #endif
+  return data()[position];
+}
+
 }

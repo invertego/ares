@@ -25,7 +25,7 @@ NALL_HEADER_INLINE auto library::openAbsolute(const string& name) -> bool {
 
 NALL_HEADER_INLINE auto library::sym(const string& name) -> void* {
   if(!handle) return nullptr;
-  return (void*)GetProcAddress((HMODULE)handle, name);
+  return (void*)GetProcAddress((HMODULE)handle, name.data());
 }
 
 NALL_HEADER_INLINE auto library::close() -> void {

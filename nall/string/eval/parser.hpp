@@ -187,7 +187,7 @@ inline auto parse(Node*& node, const char*& s, u32 depth) -> void {
 
 inline auto parse(const string& expression) -> Node* {
   auto result = new Node;
-  const char* p = expression;
+  const char* p{expression};
   parse(result, p, 0);
   return result;
 }

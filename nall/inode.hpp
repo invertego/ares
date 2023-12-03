@@ -32,38 +32,38 @@ struct inode {
   auto operator=(const inode&) -> inode& = delete;
 
   static auto exists(const string& name) -> bool {
-    return access(name, F_OK) == 0;
+    return access(name.data(), F_OK) == 0;
   }
 
   static auto readable(const string& name) -> bool {
-    return access(name, R_OK) == 0;
+    return access(name.data(), R_OK) == 0;
   }
 
   static auto writable(const string& name) -> bool {
-    return access(name, W_OK) == 0;
+    return access(name.data(), W_OK) == 0;
   }
 
   static auto executable(const string& name) -> bool {
-    return access(name, X_OK) == 0;
+    return access(name.data(), X_OK) == 0;
   }
 
   static auto hidden(const string& name) -> bool;
 
   static auto mode(const string& name) -> u32 {
     struct stat data{};
-    stat(name, &data);
+    stat(name.data(), &data);
     return data.st_mode;
   }
 
   static auto uid(const string& name) -> u32 {
     struct stat data{};
-    stat(name, &data);
+    stat(name.data(), &data);
     return data.st_uid;
   }
 
   static auto gid(const string& name) -> u32 {
     struct stat data{};
-    stat(name, &data);
+    stat(name.data(), &data);
     return data.st_gid;
   }
 
@@ -85,7 +85,7 @@ struct inode {
 
   static auto timestamp(const string& name, time mode = time::modify) -> u64 {
     struct stat data{};
-    stat(name, &data);
+    stat(name.data(), &data);
     switch(mode) {
     #if defined(PLATFORM_WINDOWS)
     //on Windows, the last status change time (ctime) holds the file creation time instead
@@ -139,21 +139,21 @@ struct inode {
     struct utimbuf timeBuffer;
     timeBuffer.modtime = mode == time::modify ? value : inode::timestamp(name, time::modify);
     timeBuffer.actime  = mode == time::access ? value : inode::timestamp(name, time::access);
-    return utime(name, &timeBuffer) == 0;
+    return utime(name.data(), &timeBuffer) == 0;
   }
 
   //returns true if 'name' already exists
   static auto create(const string& name, u32 permissions = 0755) -> bool {
     if(exists(name)) return true;
-    if(name.endsWith("/")) return mkdir(name, permissions) == 0;
-    s32 fd = open(name, O_CREAT | O_EXCL, permissions);
+    if(name.endsWith("/")) return mkdir(name.data(), permissions) == 0;
+    s32 fd = open(name.data(), O_CREAT | O_EXCL, permissions);
     if(fd < 0) return false;
     return close(fd), true;
   }
 
   //returns false if 'name' and 'targetname' are on different file systems (requires copy)
   static auto rename(const string& name, const string& targetname) -> bool {
-    return ::rename(name, targetname) == 0;
+    return ::rename(name.data(), targetname.data()) == 0;
   }
 
   //returns false if 'name' is a directory that is not empty

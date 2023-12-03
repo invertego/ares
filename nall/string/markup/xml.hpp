@@ -208,7 +208,7 @@ inline auto unserialize(const string& markup) -> Markup::Node {
   SharedNode node(new ManagedNode);
   try {
 
-    const char* p = markup;
+    const char* p{markup};
     node->parse(p);
   } catch(const char* error) {
     node.reset();

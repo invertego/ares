@@ -40,17 +40,17 @@ static auto glrProgram() -> GLuint {
 }
 
 static auto glrUniform1i(const string& name, GLint value) -> void {
-  GLint location = glGetUniformLocation(glrProgram(), name);
+  GLint location = glGetUniformLocation(glrProgram(), name.data());
   glUniform1i(location, value);
 }
 
 static auto glrUniform4f(const string& name, GLfloat value0, GLfloat value1, GLfloat value2, GLfloat value3) -> void {
-  GLint location = glGetUniformLocation(glrProgram(), name);
+  GLint location = glGetUniformLocation(glrProgram(), name.data());
   glUniform4f(location, value0, value1, value2, value3);
 }
 
 static auto glrUniformMatrix4fv(const string& name, GLfloat* values) -> void {
-  GLint location = glGetUniformLocation(glrProgram(), name);
+  GLint location = glGetUniformLocation(glrProgram(), name.data());
   glUniformMatrix4fv(location, 1, GL_FALSE, values);
 }
 

@@ -81,14 +81,14 @@ protected:
 
   //read a node and all of its child nodes
   auto parseNode(const vector<string>& text, u32& y, string_view spacing) -> void {
-    const char* p = text[y++];
+    const char* p{text[y++]};
     _metadata = parseDepth(p);
     parseName(p);
     parseData(p, spacing);
     parseAttributes(p, spacing);
 
     while(y < text.size()) {
-      u32 depth = readDepth(text[y]);
+      u32 depth = readDepth(text[y].data());
       if(depth <= _metadata) break;
 
       if(text[y][depth] == ':') {

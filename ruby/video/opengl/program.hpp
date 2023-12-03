@@ -4,9 +4,9 @@ auto OpenGLProgram::bind(OpenGL* instance, const Markup::Node& node, const strin
   modulo = glrModulo(node["modulo"].integer());
 
   string w = node["width"].text(), h = node["height"].text();
-  if(w.endsWith("%")) relativeWidth = toReal(w.trimRight("%", 1L)) / 100.0;
+  if(w.endsWith("%")) relativeWidth = w.trimRight("%", 1L).real() / 100.0;
   else absoluteWidth = w.natural();
-  if(h.endsWith("%")) relativeHeight = toReal(h.trimRight("%", 1L)) / 100.0;
+  if(h.endsWith("%")) relativeHeight = h.trimRight("%", 1L).real() / 100.0;
   else absoluteHeight = h.natural();
 
   format = glrFormat(node["format"].text());
@@ -17,15 +17,15 @@ auto OpenGLProgram::bind(OpenGL* instance, const Markup::Node& node, const strin
   if(file::exists({pathname, node["vertex"].text()})) {
     string source = file::read({pathname, node["vertex"].text()});
     parse(instance, source);
-    vertex = glrCreateShader(program, GL_VERTEX_SHADER, source);
+    vertex = glrCreateShader(program, GL_VERTEX_SHADER, source.data());
   } else {
-    vertex = glrCreateShader(program, GL_VERTEX_SHADER, OpenGLVertexShader);
+    vertex = glrCreateShader(program, GL_VERTEX_SHADER, OpenGLVertexShader.data());
   }
 
   if(file::exists({pathname, node["geometry"].text()})) {
     string source = file::read({pathname, node["geometry"].text()});
     parse(instance, source);
-    geometry = glrCreateShader(program, GL_GEOMETRY_SHADER, source);
+    geometry = glrCreateShader(program, GL_GEOMETRY_SHADER, source.data());
   } else {
   //geometry shaders, when attached, must pass all vertex output through to the fragment shaders
   //geometry = glrCreateShader(program, GL_GEOMETRY_SHADER, OpenGLGeometryShader);
@@ -34,9 +34,9 @@ auto OpenGLProgram::bind(OpenGL* instance, const Markup::Node& node, const strin
   if(file::exists({pathname, node["fragment"].text()})) {
     string source = file::read({pathname, node["fragment"].text()});
     parse(instance, source);
-    fragment = glrCreateShader(program, GL_FRAGMENT_SHADER, source);
+    fragment = glrCreateShader(program, GL_FRAGMENT_SHADER, source.data());
   } else {
-    fragment = glrCreateShader(program, GL_FRAGMENT_SHADER, OpenGLFragmentShader);
+    fragment = glrCreateShader(program, GL_FRAGMENT_SHADER, OpenGLFragmentShader.data());
   }
 
   for(auto& leaf : node.find("pixmap")) {

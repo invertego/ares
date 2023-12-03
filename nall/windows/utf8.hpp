@@ -6,6 +6,7 @@ namespace nall {
   //UTF-8 to UTF-16
   struct utf16_t {
     utf16_t(const char* s = "") { operator=(s); }
+    template<typename T> utf16_t(T&& s) { const char* p{s}; operator=(p); }
     ~utf16_t() { reset(); }
 
     utf16_t(const utf16_t&) = delete;
