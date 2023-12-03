@@ -34,7 +34,7 @@ auto pCheckLabel::setChecked(bool checked) -> void {
 }
 
 auto pCheckLabel::setText(const string& text) -> void {
-  gtk_button_set_label(GTK_BUTTON(gtkWidget), text);
+  gtk_button_set_label(GTK_BUTTON(gtkWidget), text.data());
   setFont(self().font(true));  //gtk_button_set_label() recreates label, which destroys currently assigned font
 }
 

@@ -211,7 +211,7 @@ inline auto directory::copy(const string& source, const string& target) -> bool 
     for(auto& part : list) {
       path.append(part, "/");
       if(directory::exists(path)) continue;
-      result &= (mkdir(path, permissions) == 0);
+      result &= (mkdir(path.data(), permissions) == 0);
     }
     return result;
   }
@@ -224,13 +224,13 @@ inline auto directory::copy(const string& source, const string& target) -> bool 
       if(name.endsWith("/")) directory::remove({pathname, separator, name});
       else file::remove({pathname, separator, name});
     }
-    return rmdir(pathname) == 0;
+    return rmdir(pathname.data()) == 0;
   }
 
   inline auto directory::exists(const string& pathname) -> bool {
     if(!pathname) return false;
     struct stat data;
-    if(stat(pathname, &data) != 0) return false;
+    if(stat(pathname.data(), &data) != 0) return false;
     return S_ISDIR(data.st_mode);
   }
 
@@ -240,7 +240,7 @@ inline auto directory::copy(const string& source, const string& target) -> bool 
     vector<string> list;
     DIR* dp;
     struct dirent* ep;
-    dp = opendir(pathname);
+    dp = opendir(pathname.data());
     if(dp) {
       while(ep = readdir(dp)) {
         if(!strcmp(ep->d_name, ".")) continue;
@@ -260,7 +260,7 @@ inline auto directory::copy(const string& source, const string& target) -> bool 
     vector<string> list;
     DIR* dp;
     struct dirent* ep;
-    dp = opendir(pathname);
+    dp = opendir(pathname.data());
     if(dp) {
       while(ep = readdir(dp)) {
         if(!strcmp(ep->d_name, ".")) continue;

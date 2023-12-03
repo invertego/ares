@@ -4,7 +4,7 @@ namespace nall {
 
 inline auto string::read(string_view filename) -> string {
   #if !defined(_WIN32)
-  FILE* fp = fopen(filename, "rb");
+  FILE* fp = fopen(filename.data(), "rb");
   #else
   FILE* fp = _wfopen(utf16_t(filename), L"rb");
   #endif

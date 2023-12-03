@@ -36,13 +36,13 @@ auto pConsole::print(const string& text) -> void {
   //insert text before prompt and command
   GtkTextIter iter;
   gtk_text_buffer_get_iter_at_line_offset(textBuffer, &iter, gtk_text_buffer_get_line_count(textBuffer), 0);
-  gtk_text_buffer_insert(textBuffer, &iter, text, -1);
+  gtk_text_buffer_insert(textBuffer, &iter, text.data(), -1);
   _seekToEnd();
 }
 
 auto pConsole::reset() -> void {
   //flush history and redraw prompt
-  gtk_text_buffer_set_text(textBuffer, state().prompt, -1);
+  gtk_text_buffer_set_text(textBuffer, state().prompt.data(), -1);
   _seekToEnd();
 }
 
@@ -63,7 +63,7 @@ auto pConsole::setPrompt(const string& prompt) -> void {
   gtk_text_buffer_get_iter_at_line_offset(textBuffer, &rhs, gtk_text_buffer_get_line_count(textBuffer), previousPrompt.size());
   gtk_text_buffer_delete(textBuffer, &lhs, &rhs);
   gtk_text_buffer_get_iter_at_line_offset(textBuffer, &lhs, gtk_text_buffer_get_line_count(textBuffer), 0);
-  gtk_text_buffer_insert(textBuffer, &lhs, previousPrompt = prompt, -1);
+  gtk_text_buffer_insert(textBuffer, &lhs, (previousPrompt = prompt).data(), -1);
   _seekToEnd();
 }
 
@@ -80,7 +80,7 @@ auto pConsole::_keyPress(u32 scancode, u32 mask) -> bool {
     char* temp = gtk_text_buffer_get_text(textBuffer, &start, &end, true);
     string s = temp;
     g_free(temp);
-    gtk_text_buffer_insert(textBuffer, &end, string{"\n", state().prompt}, -1);
+    gtk_text_buffer_insert(textBuffer, &end, string{"\n", state().prompt}.data(), -1);
     self().doActivate(s);
     if(s) history.prepend(s);
     if(history.size() > 128) history.removeRight();
@@ -93,7 +93,7 @@ auto pConsole::_keyPress(u32 scancode, u32 mask) -> bool {
     gtk_text_buffer_delete(textBuffer, &start, &end);
     gtk_text_buffer_get_end_iter(textBuffer, &end);
     if(historyOffset < history.size()) {
-      gtk_text_buffer_insert(textBuffer, &end, history[historyOffset++], -1);
+      gtk_text_buffer_insert(textBuffer, &end, history[historyOffset++].data(), -1);
     }
     _seekToEnd();
     return true;
@@ -103,7 +103,7 @@ auto pConsole::_keyPress(u32 scancode, u32 mask) -> bool {
     gtk_text_buffer_delete(textBuffer, &start, &end);
     gtk_text_buffer_get_end_iter(textBuffer, &end);
     if(historyOffset > 0) {
-      gtk_text_buffer_insert(textBuffer, &end, history[--historyOffset], -1);
+      gtk_text_buffer_insert(textBuffer, &end, history[--historyOffset].data(), -1);
     }
     _seekToEnd();
     return true;
@@ -164,7 +164,7 @@ auto pConsole::_keyPress(u32 scancode, u32 mask) -> bool {
 
   if(scancode >= 0x20 && scancode <= 0x7e) {
     if(gtk_text_iter_get_offset(&cursor) < gtk_text_iter_get_offset(&start)) return true;
-    gtk_text_buffer_insert(textBuffer, &cursor, string{(char)scancode}, -1);
+    gtk_text_buffer_insert(textBuffer, &cursor, string{(char)scancode}.data(), -1);
     _seekToMark();
     return true;
   }

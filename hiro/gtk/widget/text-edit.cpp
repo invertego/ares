@@ -67,7 +67,7 @@ auto pTextEdit::setForegroundColor(Color color) -> void {
 auto pTextEdit::setText(const string& text) -> void {
   lock();
   textBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(subWidget));
-  gtk_text_buffer_set_text(textBuffer, text, -1);
+  gtk_text_buffer_set_text(textBuffer, text.data(), -1);
   unlock();
 }
 

@@ -149,7 +149,7 @@ struct InputJoypadUdev {
       devices = udev_enumerate_get_list_entry(enumerator);
       for(udev_list_entry* item = devices; item != nullptr; item = udev_list_entry_get_next(item)) {
         string name = udev_list_entry_get_name(item);
-        udev_device* device = udev_device_new_from_syspath(context, name);
+        udev_device* device = udev_device_new_from_syspath(context, name.data());
         string deviceNode = udev_device_get_devnode(device);
         if(deviceNode) createJoypad(device, deviceNode);
         udev_device_unref(device);
@@ -193,10 +193,10 @@ private:
     jp.deviceNode = deviceNode;
 
     struct stat st;
-    if(stat(deviceNode, &st) < 0) return;
+    if(stat(deviceNode.data(), &st) < 0) return;
     jp.device = st.st_rdev;
 
-    jp.fd = open(deviceNode, O_RDWR | O_NONBLOCK);
+    jp.fd = open(deviceNode.data(), O_RDWR | O_NONBLOCK);
     if(jp.fd < 0) return;
 
     u8 evbit[(EV_MAX + 7) / 8] = {0};

@@ -242,7 +242,7 @@ auto pTabFrame::_synchronizeTab(u32 position) -> void {
     item->state.text,
     item->state.text && item->state.closable ? " " : ""
   };
-  gtk_label_set_text(GTK_LABEL(tab.title), text);
+  gtk_label_set_text(GTK_LABEL(tab.title), text.data());
 }
 
 //compute the height of the tallest tab for child layout geometry calculations

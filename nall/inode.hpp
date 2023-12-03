@@ -109,7 +109,7 @@ struct inode {
 
   static auto setMode(const string& name, u32 mode) -> bool {
     #if !defined(PLATFORM_WINDOWS)
-    return chmod(name, mode) == 0;
+    return chmod(name.data(), mode) == 0;
     #else
     return _wchmod(utf16_t(name), (mode & 0400 ? _S_IREAD : 0) | (mode & 0200 ? _S_IWRITE : 0)) == 0;
     #endif
@@ -117,9 +117,9 @@ struct inode {
 
   static auto setOwner(const string& name, const string& owner) -> bool {
     #if !defined(PLATFORM_WINDOWS)
-    struct passwd* pwd = getpwnam(owner);
+    struct passwd* pwd = getpwnam(owner.data());
     if(!pwd) return false;
-    return chown(name, pwd->pw_uid, inode::gid(name)) == 0;
+    return chown(name.data(), pwd->pw_uid, inode::gid(name)) == 0;
     #else
     return true;
     #endif
@@ -127,9 +127,9 @@ struct inode {
 
   static auto setGroup(const string& name, const string& group) -> bool {
     #if !defined(PLATFORM_WINDOWS)
-    struct group* grp = getgrnam(group);
+    struct group* grp = getgrnam(group.data());
     if(!grp) return false;
-    return chown(name, inode::uid(name), grp->gr_gid) == 0;
+    return chown(name.data(), inode::uid(name), grp->gr_gid) == 0;
     #else
     return true;
     #endif
@@ -162,8 +162,8 @@ struct inode {
     if(name.endsWith("/")) return _wrmdir(utf16_t(name)) == 0;
     return _wunlink(utf16_t(name)) == 0;
     #else
-    if(name.endsWith("/")) return rmdir(name) == 0;
-    return unlink(name) == 0;
+    if(name.endsWith("/")) return rmdir(name.data()) == 0;
+    return unlink(name.data()) == 0;
     #endif
   }
 };

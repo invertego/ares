@@ -36,7 +36,7 @@ auto pTableViewItem::setFocused() -> void {
     Application::processEvents();
 
     auto lock = parent->acquire();
-    GtkTreePath* path = gtk_tree_path_new_from_string(string{self().offset()});
+    GtkTreePath* path = gtk_tree_path_new_from_string(string{self().offset()}.data());
     gtk_tree_view_set_cursor(parent->gtkTreeView, path, nullptr, false);
     gtk_tree_view_scroll_to_cell(parent->gtkTreeView, path, nullptr, true, 0.5, 0.0);
     gtk_tree_path_free(path);

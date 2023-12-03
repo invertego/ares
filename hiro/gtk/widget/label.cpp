@@ -129,7 +129,7 @@ auto pLabel::setForegroundColor(Color color) -> void {
 }
 
 auto pLabel::setText(const string& text) -> void {
-  gtk_label_set_text(GTK_LABEL(subWidget), text);
+  gtk_label_set_text(GTK_LABEL(subWidget), text.data());
 }
 
 auto pLabel::setVisible(bool visible) -> void {

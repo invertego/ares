@@ -73,7 +73,7 @@ auto pIconView::append(sIconViewItem item) -> void {
 auto pIconView::remove(sIconViewItem item) -> void {
   lock();
   GtkTreeIter iter;
-  if(gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(store), &iter, string{item->offset()})) {
+  if(gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(store), &iter, string{item->offset()}.data())) {
     gtk_list_store_remove(store, &iter);
   }
   _updateSelected();
@@ -124,7 +124,7 @@ auto pIconView::setGeometry(Geometry geometry) -> void {
 auto pIconView::setItemIcon(u32 position, const image& icon) -> void {
   if(position >= self().itemCount()) return;
   GtkTreeIter iter;
-  if(gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(store), &iter, string{position})) {
+  if(gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(store), &iter, string{position}.data())) {
     if(icon) {
       GdkPixbuf* pixbuf = CreatePixbuf(icon);
       gtk_list_store_set(store, &iter, 0, pixbuf, -1);
@@ -137,7 +137,7 @@ auto pIconView::setItemIcon(u32 position, const image& icon) -> void {
 auto pIconView::setItemSelected(u32 position, bool selected) -> void {
   if(position >= self().itemCount()) return;
   lock();
-  GtkTreePath* path = gtk_tree_path_new_from_string(string{position});
+  GtkTreePath* path = gtk_tree_path_new_from_string(string{position}.data());
   if(selected) {
     gtk_icon_view_select_path(GTK_ICON_VIEW(subWidget), path);
   } else {
@@ -173,7 +173,7 @@ auto pIconView::setItemSelectedNone() -> void {
 auto pIconView::setItemText(u32 position, const string& text) -> void {
   if(position >= self().itemCount()) return;
   GtkTreeIter iter;
-  if(gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(store), &iter, string{position})) {
+  if(gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(store), &iter, string{position}.data())) {
     gtk_list_store_set(store, &iter, 1, (const char*)text, -1);
   }
 }

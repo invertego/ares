@@ -128,7 +128,7 @@ auto pApplication::initialize() -> void {
 
   //set WM_CLASS to Application::name()
   auto name = Application::state().name ? Application::state().name : string{"hiro"};
-  gdk_set_program_class(name);
+  gdk_set_program_class(name.data());
 
   #if 0 && defined(BUILD_DEBUG)
   //force a trap on Gtk-CRITICAL and Gtk-WARNING messages

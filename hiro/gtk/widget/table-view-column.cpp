@@ -114,11 +114,11 @@ auto pTableViewColumn::setSorting(Sort sorting) -> void {
   string text;
   if(sorting == Sort::Ascending ) text = "\u25b4";
   if(sorting == Sort::Descending) text = "\u25be";
-  gtk_label_set_text(GTK_LABEL(gtkHeaderSort), text);
+  gtk_label_set_text(GTK_LABEL(gtkHeaderSort), text.data());
 }
 
 auto pTableViewColumn::setText(const string& text) -> void {
-  gtk_label_set_text(GTK_LABEL(gtkHeaderText), text);
+  gtk_label_set_text(GTK_LABEL(gtkHeaderText), text.data());
 }
 
 auto pTableViewColumn::setVisible(bool visible) -> void {

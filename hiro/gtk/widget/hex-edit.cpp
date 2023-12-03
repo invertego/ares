@@ -153,7 +153,7 @@ auto pHexEdit::update() -> void {
     if(row != state().rows - 1) output.append("\n");
   }
 
-  gtk_text_buffer_set_text(textBuffer, output, -1);
+  gtk_text_buffer_set_text(textBuffer, output.data(), -1);
   if(position == 0) position = 10;  //start at first position where hex values can be entered
   setCursorPosition(position);
 }

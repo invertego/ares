@@ -47,7 +47,7 @@ template<typename... P> inline auto execute(const string& name, P&&... p) -> exe
     close(fderr[0]);
     close(fdout[1]);
     close(fderr[1]);
-    execvp(name, (char* const*)argv);
+    execvp(name.data(), (char* const*)argv);
     //this is called only if execvp fails:
     //use _exit instead of exit, to avoid destroying key shared file descriptors
     _exit(EXIT_FAILURE);
@@ -97,7 +97,7 @@ template<typename... P> inline auto invoke(const string& name, P&&... p) -> void
     for(auto& arg : argl) *argp++ = (const char*)arg;
     *argp++ = nullptr;
 
-    if(execvp(name, (char* const*)argv) < 0) {
+    if(execvp(name.data(), (char* const*)argv) < 0) {
       #if defined(PLATFORM_MACOS)
       execlp("open", "open", (const char*)name, nullptr);
       #else

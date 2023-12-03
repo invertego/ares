@@ -115,7 +115,7 @@ private:
     terminate();
 
     if(!hasDevices().find(self.device)) self.device = "default";
-    if(snd_pcm_open(&_interface, self.device, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK) < 0) return terminate(), false;
+    if(snd_pcm_open(&_interface, self.device.data(), SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK) < 0) return terminate(), false;
 
     u32 rate = self.frequency;
     u32 bufferTime = self.latency * 1000;

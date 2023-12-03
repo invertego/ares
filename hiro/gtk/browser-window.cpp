@@ -8,9 +8,9 @@ static auto BrowserWindow_addFilters(GtkWidget* dialog, vector<string> filters) 
     if(part.size() != 2) continue;
 
     GtkFileFilter* gtkFilter = gtk_file_filter_new();
-    gtk_file_filter_set_name(gtkFilter, part[0]);
+    gtk_file_filter_set_name(gtkFilter, part[0].data());
     auto patterns = part[1].split(":");
-    for(auto& pattern : patterns) gtk_file_filter_add_pattern(gtkFilter, pattern);
+    for(auto& pattern : patterns) gtk_file_filter_add_pattern(gtkFilter, pattern.data());
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), gtkFilter);
   }
 }
@@ -19,7 +19,7 @@ auto pBrowserWindow::directory(BrowserWindow::State& state) -> string {
   string name;
 
   GtkWidget* dialog = gtk_file_chooser_dialog_new(
-    state.title ? state.title : "Select Directory",
+    state.title ? state.title.data() : "Select Directory",
     state.parent && state.parent->self() ? GTK_WINDOW(state.parent->self()->widget) : (GtkWindow*)nullptr,
     GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
     GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,

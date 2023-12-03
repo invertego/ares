@@ -190,10 +190,10 @@ struct file_buffer {
 
     switch(fileMode = mode_) {
     #if defined(API_POSIX)
-    case mode::read:   fileHandle = fopen(filename, "rb" ); break;
-    case mode::write:  fileHandle = fopen(filename, "wb+"); break;  //need read permission for buffering
-    case mode::modify: fileHandle = fopen(filename, "rb+"); break;
-    case mode::append: fileHandle = fopen(filename, "ab+"); break;
+    case mode::read:   fileHandle = fopen(filename.data(), "rb" ); break;
+    case mode::write:  fileHandle = fopen(filename.data(), "wb+"); break;  //need read permission for buffering
+    case mode::modify: fileHandle = fopen(filename.data(), "rb+"); break;
+    case mode::append: fileHandle = fopen(filename.data(), "ab+"); break;
     #elif defined(API_WINDOWS)
     case mode::read:   fileHandle = _wfopen(utf16_t(filename), L"rb" ); break;
     case mode::write:  fileHandle = _wfopen(utf16_t(filename), L"wb+"); break;

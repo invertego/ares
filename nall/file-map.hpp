@@ -126,7 +126,7 @@ public:
       break;
     }
 
-    _fd = ::open(filename, openFlags, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+    _fd = ::open(filename.data(), openFlags, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     if(_fd < 0) return false;
 
     struct stat _stat;

@@ -74,7 +74,7 @@ auto pFrame::setGeometry(Geometry geometry) -> void {
 }
 
 auto pFrame::setText(const string& text) -> void {
-  gtk_label_set_text(GTK_LABEL(gtkLabel), text);
+  gtk_label_set_text(GTK_LABEL(gtkLabel), text.data());
   setGeometry(self().geometry());
 }
 

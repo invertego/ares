@@ -50,7 +50,7 @@ auto pLineEdit::setForegroundColor(Color color) -> void {
 
 auto pLineEdit::setText(const string& text) -> void {
   lock();
-  gtk_entry_set_text(GTK_ENTRY(gtkWidget), text);
+  gtk_entry_set_text(GTK_ENTRY(gtkWidget), text.data());
   unlock();
 }
 

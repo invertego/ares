@@ -37,7 +37,7 @@ struct file : inode {
 
   static auto truncate(const string& filename, u64 size) -> bool {
     #if defined(API_POSIX)
-    return ::truncate(filename, size) == 0;
+    return ::truncate(filename.data(), size) == 0;
     #elif defined(API_WINDOWS)
     if(auto fp = _wfopen(utf16_t(filename), L"rb+")) {
       bool result = _chsize(fileno(fp), size) == 0;
@@ -52,7 +52,7 @@ struct file : inode {
   static auto exists(const string& filename) -> bool {
     #if defined(API_POSIX)
     struct stat data;
-    if(stat(filename, &data) != 0) return false;
+    if(stat(filename.data(), &data) != 0) return false;
     #elif defined(API_WINDOWS)
     struct __stat64 data;
     if(_wstat64(utf16_t(filename), &data) != 0) return false;
@@ -63,7 +63,7 @@ struct file : inode {
   static auto size(const string& filename) -> u64 {
     #if defined(API_POSIX)
     struct stat data;
-    stat(filename, &data);
+    stat(filename.data(), &data);
     #elif defined(API_WINDOWS)
     struct __stat64 data;
     _wstat64(utf16_t(filename), &data);

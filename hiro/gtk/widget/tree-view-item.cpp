@@ -61,7 +61,7 @@ auto pTreeViewItem::setExpanded(bool expanded) -> void {
 
 auto pTreeViewItem::setFocused() -> void {
   if(auto parentWidget = _parentWidget()) {
-    GtkTreePath* path = gtk_tree_path_new_from_string(self().path().transform("/", ":"));
+    GtkTreePath* path = gtk_tree_path_new_from_string(self().path().transform("/", ":").data());
     gtk_tree_view_set_cursor(parentWidget->gtkTreeView, path, nullptr, false);
     gtk_tree_view_scroll_to_cell(parentWidget->gtkTreeView, path, nullptr, true, 0.5, 0.0);
     gtk_tree_path_free(path);

@@ -104,7 +104,7 @@ auto pComboEdit::setFont(const Font& font) -> void {
 
 auto pComboEdit::setText(const string& text) -> void {
   lock();
-  gtk_entry_set_text(GTK_ENTRY(gtk_bin_get_child(GTK_BIN(gtkComboBox))), text);
+  gtk_entry_set_text(GTK_ENTRY(gtk_bin_get_child(GTK_BIN(gtkComboBox))), text.data());
   unlock();
 }
 

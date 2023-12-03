@@ -37,22 +37,22 @@ private:
 #if defined(PLATFORM_LINUX) || defined(PLATFORM_BSD)
 inline auto library::open(const string& name, const string& path) -> bool {
   if(handle) close();
-  if(path) handle = (uintptr)dlopen(string(path, "lib", name, ".so"), RTLD_LAZY);
-  if(!handle) handle = (uintptr)dlopen(string(Path::user(), ".local/lib/lib", name, ".so"), RTLD_LAZY);
-  if(!handle) handle = (uintptr)dlopen(string("/usr/local/lib/lib", name, ".so"), RTLD_LAZY);
-  if(!handle) handle = (uintptr)dlopen(string("lib", name, ".so"), RTLD_LAZY);
+  if(path) handle = (uintptr)dlopen(string(path, "lib", name, ".so").data(), RTLD_LAZY);
+  if(!handle) handle = (uintptr)dlopen(string(Path::user(), ".local/lib/lib", name, ".so").data(), RTLD_LAZY);
+  if(!handle) handle = (uintptr)dlopen(string("/usr/local/lib/lib", name, ".so").data(), RTLD_LAZY);
+  if(!handle) handle = (uintptr)dlopen(string("lib", name, ".so").data(), RTLD_LAZY);
   return handle;
 }
 
 inline auto library::openAbsolute(const string& name) -> bool {
   if(handle) close();
-  handle = (uintptr)dlopen(name, RTLD_LAZY);
+  handle = (uintptr)dlopen(name.data(), RTLD_LAZY);
   return handle;
 }
 
 inline auto library::sym(const string& name) -> void* {
   if(!handle) return nullptr;
-  return dlsym((void*)handle, name);
+  return dlsym((void*)handle, name.data());
 }
 
 inline auto library::close() -> void {
