@@ -122,11 +122,20 @@ ifeq ($(cl),true)
   flags       += -nologo -permissive- -W2 -Fd$(object.path)/
   options     += -nologo $(if $(findstring clang,$(compiler)),-fuse-ld=lld) -link
 else
-  flags.c      = -x c -std=c11
-  flags.cpp    = -x c++ -std=c++17
-  flags.objc   = -x objective-c -std=c11
-  flags.objcpp = -x objective-c++ -std=c++17
+  flags.c      = -x c -std=c11 -v
+  flags.cpp    = -x c++ -std=c++17 -v
+  flags.objc   = -x objective-c -std=c11 -v
+  flags.objcpp = -x objective-c++ -std=c++17 -v
   flags.deps   = -MMD -MP -MF $(@:.o=.d)
+endif
+
+# architecture detection
+ifeq ($(arch),)
+  ifneq ($(machine),)
+    arch := $(machine)
+  else
+    $(error unknown arch, please specify manually.)
+  endif
 endif
 
 # explicit architecture flags to allow for cross-compilation on macos
@@ -140,15 +149,6 @@ ifeq ($(platform),macos)
   endif
   ifneq ($(machine),$(arch))
     local = false
-  endif
-endif
-
-# architecture detection
-ifeq ($(arch),)
-  ifneq ($(machine),)
-    arch := $(machine)
-  else
-    $(error unknown arch, please specify manually.)
   endif
 endif
 
@@ -284,7 +284,7 @@ endif
 
 # macos settings
 ifeq ($(platform),macos)
-  flags   += -stdlib=libc++ -mmacosx-version-min=10.9 -Wno-auto-var-id -fobjc-arc
+  flags   += -mmacosx-version-min=10.9 -Wno-auto-var-id -Wno-deprecated-declarations -fobjc-arc
   options += -lc++ -lobjc -mmacosx-version-min=10.9
   # allow mprotect() on dynamic recompiler code blocks
   options += -Wl,-segprot,__DATA,rwx,rw
