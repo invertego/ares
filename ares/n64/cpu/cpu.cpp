@@ -10,6 +10,7 @@ CPU cpu;
 #include "memory.cpp"
 #include "exceptions.cpp"
 #include "algorithms.cpp"
+#include "decoder.cpp"
 #include "interpreter.cpp"
 #include "interpreter-ipu.cpp"
 #include "interpreter-scc.cpp"
@@ -130,7 +131,7 @@ auto CPU::instruction() -> void {
     auto data = fetch(ipu.pc);
     if (!data) return;
     instructionPrologue(*data);
-    decoderEXECUTE();
+    interpreterEXECUTE();
     instructionEpilogue();
   }
 }

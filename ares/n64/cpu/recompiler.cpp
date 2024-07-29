@@ -41,6 +41,7 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Bl
       mov32(reg(1), imm(instruction));
       call(&CPU::instructionPrologue);
     }
+    OpInfo op = self.decoderEXECUTE(instruction);
     bool branched = emitEXECUTE(instruction);
     if(unlikely(instruction == 0x1000'ffff  //beq 0,0,<pc>
              || instruction == (2 << 26 | vaddr >> 2 & 0x3ff'ffff))) {  //j <pc>

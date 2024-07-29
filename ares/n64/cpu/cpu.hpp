@@ -43,6 +43,34 @@ struct CPU : Thread {
 
   auto power(bool reset) -> void;
 
+  struct OpInfo {
+    enum : u32 {
+      Load          = 1 << 0,
+      Store         = 1 << 1,
+      Branch        = 1 << 2,
+      Likely        = 1 << 3,
+      Overflow      = 1 << 4,
+      Breakpoint    = 1 << 5,
+      Double        = 1 << 6,
+      Syscall       = 1 << 7,
+      Cop0          = 1 << 8,
+      Cop1          = 1 << 9,
+      Cop2          = 1 << 10,
+      Trap          = 1 << 11,
+      Unimplemented = 1 << 12,
+      Reserved      = 1 << 13,
+    };
+
+    u32 flags;
+    struct {
+      u32 use, def;
+    } r, f;
+
+    auto load() const -> bool { return flags & Load; }
+    auto store() const -> bool { return flags & Store; }
+    auto branch() const -> bool { return flags & Branch; }
+  };
+
   struct Pipeline {
     u64 address;
     u32 instruction;
@@ -837,12 +865,20 @@ struct CPU : Thread {
   auto COP2INVALID() -> void;
 
   //decoder.cpp
-  auto decoderEXECUTE() -> void;
-  auto decoderSPECIAL() -> void;
-  auto decoderREGIMM() -> void;
-  auto decoderSCC() -> void;
-  auto decoderFPU() -> void;
-  auto decoderCOP2() -> void;
+  auto decoderEXECUTE(u32 instruction) const -> OpInfo;
+  auto decoderSPECIAL(u32 instruction) const -> OpInfo;
+  auto decoderREGIMM(u32 instruction) const -> OpInfo;
+  auto decoderSCC(u32 instruction) const -> OpInfo;
+  auto decoderFPU(u32 instruction) const -> OpInfo;
+  auto decoderCOP2(u32 instruction) const -> OpInfo;
+
+  //interpreter.cpp
+  auto interpreterEXECUTE() -> void;
+  auto interpreterSPECIAL() -> void;
+  auto interpreterREGIMM() -> void;
+  auto interpreterSCC() -> void;
+  auto interpreterFPU() -> void;
+  auto interpreterCOP2() -> void;
 
   auto COP3() -> void;
   auto INVALID() -> void;
