@@ -136,6 +136,10 @@ auto CPU::instruction() -> void {
 }
 
 auto CPU::instructionPrologue(u32 instruction) -> void {
+  branch.nstate = Branch::Step;
+  branch.npc = branch.pc;
+  branch.pc += 4;
+
   pipeline.address = ipu.pc;
   pipeline.instruction = instruction;
   debugger.instruction();
@@ -152,6 +156,12 @@ auto CPU::instructionEpilogue() -> s32 {
     ipu.r[0].u64 = 0;
   }
 
+#if 1
+  auto state = branch.state;
+  branch.state = branch.nstate;
+  ipu.pc = branch.npc;
+  return state & 1;
+#else
   switch(branch.state) {
   case Branch::Step: ipu.pc += 4; return 0;
   case Branch::Take: ipu.pc += 4; branch.delaySlot(true); return 0;
@@ -163,6 +173,7 @@ auto CPU::instructionEpilogue() -> s32 {
   }
 
   unreachable;
+#endif
 }
 
 auto CPU::power(bool reset) -> void {
@@ -182,7 +193,7 @@ auto CPU::power(bool reset) -> void {
   ipu.lo.u64 = 0;
   ipu.hi.u64 = 0;
   ipu.r[29].u64 = 0xffff'ffff'a400'1ff0ull;  //stack pointer
-  ipu.pc = 0xffff'ffff'bfc0'0000ull;
+  setPc(0xffff'ffff'bfc0'0000ull);
   scc = {};
   for(auto& r : fpu.r) r.u64 = 0;
   fpu.csr = {};

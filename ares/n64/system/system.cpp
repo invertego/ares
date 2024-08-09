@@ -199,7 +199,7 @@ auto System::initDebugHooks() -> void {
       case 36: return true; // COP0 cause (ignore write)
       case 37: { // PC
         if(!GDB::server.getPcOverride()) {
-          cpu.ipu.pc = regValue;
+          cpu.setPc(regValue);
         }
         return true;
       }

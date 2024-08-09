@@ -64,20 +64,34 @@ struct CPU : Thread {
   } pipeline;
 
   struct Branch {
-    enum : u32 { Step, Take, NotTaken, DelaySlotTaken, DelaySlotNotTaken, Exception, Discard };
+    enum : u32 {
+      Step              = 0 << 1 | 0,
+      Take              = 1 << 1 | 0,
+      NotTaken          = 2 << 1 | 0,
+      DelaySlotTaken    = 3 << 1 | 1,
+      DelaySlotNotTaken = 4 << 1 | 0,
+      Exception         = 5 << 1 | 1,
+      Discard           = 6 << 1 | 1,
+    };
 
     auto inDelaySlot() const -> bool { return state == DelaySlotTaken || state == DelaySlotNotTaken; }
     auto inDelaySlotTaken() const -> bool { return state == DelaySlotTaken; }
-    auto reset() -> void { state = Step; }
-    auto take(u64 address) -> void { state = Take; pc = address; }
-    auto notTaken() -> void { state = NotTaken; }
-    auto delaySlot(bool taken) -> void { state = taken ? DelaySlotTaken : DelaySlotNotTaken; }
-    auto exception() -> void { state = Exception; }
-    auto discard() -> void { state = Discard; }
+    //auto reset() -> void { state = Step; }
+    auto take(u64 address) -> void { state = Take; nstate = DelaySlotTaken; pc = address; }
+    auto notTaken() -> void { state = NotTaken; nstate = DelaySlotNotTaken; }
+    //auto delaySlot(bool taken) -> void { state = taken ? DelaySlotTaken : DelaySlotNotTaken; }
+    auto exception(u64 address) -> void { state = Exception; npc = address; pc = npc + 4; }
+    auto discard() -> void { state = Discard; npc += 4; pc = npc + 4; }
 
-    u64 pc = 0;
-    u32 state = Step;
+    u64 pc = 0, npc = 0;
+    u32 state = Step, nstate = Step;
   } branch;
+
+  auto setPc(u64 pc) {
+    ipu.pc = pc;
+    branch.pc = pc + 4;
+    branch.state = Branch::Step;
+  }
 
   //context.cpp
   struct Context {
@@ -909,7 +923,7 @@ struct CPU : Thread {
     auto emitFPU(u32 instruction) -> bool;
     auto emitCOP2(u32 instruction) -> bool;
 
-    bool callInstructionPrologue = false;
+    bool callInstructionPrologue = false;//true;
     bump_allocator allocator;
     Pool* pools[1 << 21];  //2_MiB * sizeof(void*) == 16_MiB
   } recompiler{*this};

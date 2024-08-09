@@ -1,3 +1,5 @@
+#pragma clang diagnostic ignored "-Winvalid-offsetof"
+
 auto CPU::Recompiler::pool(u32 address) -> Pool* {
   auto& pool = pools[address >> 8 & 0x1fffff];
   if(!pool) {
@@ -40,6 +42,15 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Bl
     if(callInstructionPrologue) {
       mov32(reg(1), imm(instruction));
       call(&CPU::instructionPrologue);
+    } else {
+      #define BranchReg(x) mem(sreg(0), offsetof(CPU, branch) + offsetof(Branch, x))
+      brk();
+      mov32(BranchReg(nstate), imm(Branch::Step));
+      mov64(reg(0), BranchReg(pc));
+      mov64(BranchReg(npc), reg(0));
+      add64(BranchReg(pc), reg(0), imm(4));
+      brk();
+      #undef BranchReg
     }
     bool branched = emitEXECUTE(instruction);
     if(unlikely(instruction == 0x1000'ffff  //beq 0,0,<pc>
