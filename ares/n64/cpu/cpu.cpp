@@ -136,9 +136,11 @@ auto CPU::instruction() -> void {
 }
 
 auto CPU::instructionPrologue(u32 instruction) -> void {
-  branch.nstate = Branch::Step;
-  branch.npc = branch.pc;
-  branch.pc += 4;
+  if constexpr(Accuracy::CPU::Interpreter) {
+    branch.nstate = Branch::Step;
+    branch.npc = branch.pc;
+    branch.pc += 4;
+  }
 
   pipeline.address = ipu.pc;
   pipeline.instruction = instruction;
@@ -154,13 +156,15 @@ auto CPU::instructionEpilogue() -> s32 {
 
   if constexpr(Accuracy::CPU::Interpreter) {
     ipu.r[0].u64 = 0;
+
+    auto state = branch.state;
+    branch.state = branch.nstate;
+    ipu.pc = branch.npc;
+    return state & 1;
   }
 
 #if 1
-  auto state = branch.state;
-  branch.state = branch.nstate;
-  ipu.pc = branch.npc;
-  return state & 1;
+  return 0;
 #else
   switch(branch.state) {
   case Branch::Step: ipu.pc += 4; return 0;

@@ -25,6 +25,10 @@ auto CPU::Recompiler::fastFetchBlock(u32 address) -> Block* {
   return nullptr;
 }
 
+#define IpuBase   offsetof(IPU, r[16])
+#define IpuReg(r) sreg(1), offsetof(IPU, r) - IpuBase
+#define BranchReg(x) mem(sreg(0), offsetof(CPU, branch) + offsetof(Branch, x))
+
 auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Block* {
   if(unlikely(allocator.available() < 1_MiB)) {
     print("CPU allocator flush\n");
@@ -43,14 +47,12 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Bl
       mov32(reg(1), imm(instruction));
       call(&CPU::instructionPrologue);
     } else {
-      #define BranchReg(x) mem(sreg(0), offsetof(CPU, branch) + offsetof(Branch, x))
-      brk();
+      //brk();
       mov32(BranchReg(nstate), imm(Branch::Step));
       mov64(reg(0), BranchReg(pc));
       mov64(BranchReg(npc), reg(0));
       add64(BranchReg(pc), reg(0), imm(4));
-      brk();
-      #undef BranchReg
+      //brk();
     }
     bool branched = emitEXECUTE(instruction);
     if(unlikely(instruction == 0x1000'ffff  //beq 0,0,<pc>
@@ -60,6 +62,11 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Bl
       call(&CPU::step);
     }
     call(&CPU::instructionEpilogue);
+    and32(reg(0), BranchReg(state), imm(1));
+    mov32(BranchReg(state), BranchReg(nstate));
+    mov64(mem(IpuReg(pc)), BranchReg(npc));
+    //brk();
+
     vaddr += 4;
     address += 4;
     if(hasBranched || (address & 0xfc) == 0 || singleInstruction) break;  //block boundary
@@ -75,6 +82,8 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Bl
   return block;
 }
 
+#undef BranchReg
+
 #define Sa  (instruction >>  6 & 31)
 #define Rdn (instruction >> 11 & 31)
 #define Rtn (instruction >> 16 & 31)
@@ -83,8 +92,6 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Bl
 #define Fsn (instruction >> 11 & 31)
 #define Ftn (instruction >> 16 & 31)
 
-#define IpuBase   offsetof(IPU, r[16])
-#define IpuReg(r) sreg(1), offsetof(IPU, r) - IpuBase
 #define Rd        IpuReg(r[0]) + Rdn * sizeof(r64)
 #define Rt        IpuReg(r[0]) + Rtn * sizeof(r64)
 #define Rt32      IpuReg(r[0].u32) + Rtn * sizeof(r64)
