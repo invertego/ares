@@ -163,21 +163,7 @@ auto CPU::instructionEpilogue() -> s32 {
     return state & 1;
   }
 
-#if 1
   return 0;
-#else
-  switch(branch.state) {
-  case Branch::Step: ipu.pc += 4; return 0;
-  case Branch::Take: ipu.pc += 4; branch.delaySlot(true); return 0;
-  case Branch::NotTaken: ipu.pc += 4; branch.delaySlot(false); return 0;
-  case Branch::DelaySlotTaken: ipu.pc = branch.pc; branch.reset(); return 1;
-  case Branch::DelaySlotNotTaken: ipu.pc += 4; branch.reset(); return 0;
-  case Branch::Exception: branch.reset(); return 1;
-  case Branch::Discard: ipu.pc += 8; branch.reset(); return 1;
-  }
-
-  unreachable;
-#endif
 }
 
 auto CPU::power(bool reset) -> void {

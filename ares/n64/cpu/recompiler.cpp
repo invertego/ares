@@ -1,5 +1,3 @@
-#pragma clang diagnostic ignored "-Winvalid-offsetof"
-
 auto CPU::Recompiler::pool(u32 address) -> Pool* {
   auto& pool = pools[address >> 8 & 0x1fffff];
   if(!pool) {
