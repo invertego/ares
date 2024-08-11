@@ -48,7 +48,7 @@ auto CPU::BGEZAL(cr64& rs, s16 imm) -> void {
   bool inDelaySlot = branch.inDelaySlot();
   if(rs.s64 >= 0) branch.take(PC + 4 + (imm << 2));
   else branch.notTaken();
-  RA.u64 = s32(inDelaySlot ? branch.pc+4 : PC+8);
+  RA.u64 = s32(inDelaySlot ? branch.pc : PC+8);
 }
 
 auto CPU::BGEZALL(cr64& rs, s16 imm) -> void {
@@ -396,14 +396,14 @@ auto CPU::J(u32 imm) -> void {
 }
 
 auto CPU::JAL(u32 imm) -> void {
-  RA.u64 = branch.inDelaySlotTaken() ? branch.pc+4 : PC+8;
+  RA.u64 = branch.inDelaySlotTaken() ? branch.pc : PC+8;
   if (!branch.inDelaySlotTaken()) branch.take((PC + 4 & 0xffff'ffff'f000'0000) | (imm << 2));
   else if (!branch.inDelaySlot()) branch.notTaken();
 }
 
 auto CPU::JALR(r64& rd, cr64& rs) -> void {
   u64 tgt = rs.u64;
-  rd.u64 = branch.inDelaySlotTaken() ? branch.pc+4 : PC+8;
+  rd.u64 = branch.inDelaySlotTaken() ? branch.pc : PC+8;
   if (!branch.inDelaySlotTaken()) branch.take(tgt);
   else if (!branch.inDelaySlot()) branch.notTaken();
 }
