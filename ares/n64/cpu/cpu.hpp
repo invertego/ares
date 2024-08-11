@@ -76,10 +76,8 @@ struct CPU : Thread {
 
     auto inDelaySlot() const -> bool { return state == DelaySlotTaken || state == DelaySlotNotTaken; }
     auto inDelaySlotTaken() const -> bool { return state == DelaySlotTaken; }
-    //auto reset() -> void { state = Step; }
     auto take(u64 address) -> void { state = Take; nstate = DelaySlotTaken; pc = address; }
     auto notTaken() -> void { state = NotTaken; nstate = DelaySlotNotTaken; }
-    //auto delaySlot(bool taken) -> void { state = taken ? DelaySlotTaken : DelaySlotNotTaken; }
     auto exception(u64 address) -> void { state = Exception; npc = address; pc = npc + 4; }
     auto discard() -> void { state = Discard; npc += 4; pc = npc + 4; }
 
