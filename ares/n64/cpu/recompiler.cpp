@@ -41,12 +41,10 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Bl
   bool hasBranched = 0;
   while(true) {
     u32 instruction = bus.read<Word>(address, thread, "Ares Recompiler");
-    //brk();
     mov32(BranchReg(nstate), imm(Branch::Step));
     mov64(reg(0), BranchReg(pc));
     mov64(BranchReg(npc), reg(0));
     add64(BranchReg(pc), reg(0), imm(4));
-    //brk();
     if(callInstructionPrologue) {
       mov32(reg(1), imm(instruction));
       call(&CPU::instructionPrologue);
@@ -59,16 +57,15 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Bl
       call(&CPU::step);
     }
     call(&CPU::instructionEpilogue);
-    and32(reg(0), BranchReg(state), imm(1));
+    test32(BranchReg(state), imm(1), set_z);
     mov32(BranchReg(state), BranchReg(nstate));
     mov64(mem(IpuReg(pc)), BranchReg(npc));
-    //brk();
 
     vaddr += 4;
     address += 4;
     if(hasBranched || (address & 0xfc) == 0 || singleInstruction) break;  //block boundary
     hasBranched = branched;
-    testJumpEpilog();
+    jumpEpilog(flag_nz);
   }
   jumpEpilog();
 
