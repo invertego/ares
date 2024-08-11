@@ -42,14 +42,9 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Bl
   while(true) {
     u32 instruction = bus.read<Word>(address, thread, "Ares Recompiler");
     mov32(BranchReg(nstate), imm(Branch::Step));
-    brk();
     mov64(reg(0), BranchReg(pc));
     mov64(BranchReg(npc), reg(0));
     add64(BranchReg(pc), reg(0), imm(4));
-    brk();
-    mov64(BranchReg(npc), BranchReg(pc));
-    add64(BranchReg(pc), BranchReg(pc), imm(4));
-    brk();
     if(callInstructionPrologue) {
       mov32(reg(1), imm(instruction));
       call(&CPU::instructionPrologue);
