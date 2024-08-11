@@ -40,7 +40,6 @@ namespace nall {
   #pragma clang diagnostic ignored "-Wtrigraphs"
   #pragma clang diagnostic ignored "-Wattributes"
   #pragma clang diagnostic ignored "-Winvalid-offsetof"
-#endif
 #elif defined(__GNUC__)
   #define COMPILER_GCC
   struct Compiler {

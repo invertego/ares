@@ -39,7 +39,7 @@ struct CPU : Thread {
 
   auto instruction() -> void;
   auto instructionPrologue(u32 instruction) -> void;
-  auto instructionEpilogue() -> s32;
+  auto instructionEpilogue() -> void;
 
   auto power(bool reset) -> void;
 

@@ -147,7 +147,7 @@ auto CPU::instructionPrologue(u32 instruction) -> void {
   debugger.instruction();
 }
 
-auto CPU::instructionEpilogue() -> s32 {
+auto CPU::instructionEpilogue() -> void {
   if constexpr(Accuracy::CPU::Recompiler) {
     //simulates timings without performing actual icache loads
     icache.step(ipu.pc, devirtualizeFast(ipu.pc));
@@ -156,14 +156,9 @@ auto CPU::instructionEpilogue() -> s32 {
 
   if constexpr(Accuracy::CPU::Interpreter) {
     ipu.r[0].u64 = 0;
-
-    auto state = branch.state;
     branch.state = branch.nstate;
     ipu.pc = branch.npc;
-    return state & 1;
   }
-
-  return 0;
 }
 
 auto CPU::power(bool reset) -> void {

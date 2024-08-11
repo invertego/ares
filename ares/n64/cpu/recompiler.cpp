@@ -23,8 +23,8 @@ auto CPU::Recompiler::fastFetchBlock(u32 address) -> Block* {
   return nullptr;
 }
 
-#define IpuBase   offsetof(IPU, r[16])
-#define IpuReg(r) sreg(1), offsetof(IPU, r) - IpuBase
+#define IpuBase      offsetof(IPU, r[16])
+#define IpuReg(r)    sreg(1), offsetof(IPU, r) - IpuBase
 #define BranchReg(x) mem(sreg(0), offsetof(CPU, branch) + offsetof(Branch, x))
 
 auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Block* {
@@ -41,16 +41,15 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Bl
   bool hasBranched = 0;
   while(true) {
     u32 instruction = bus.read<Word>(address, thread, "Ares Recompiler");
+    //brk();
+    mov32(BranchReg(nstate), imm(Branch::Step));
+    mov64(reg(0), BranchReg(pc));
+    mov64(BranchReg(npc), reg(0));
+    add64(BranchReg(pc), reg(0), imm(4));
+    //brk();
     if(callInstructionPrologue) {
       mov32(reg(1), imm(instruction));
       call(&CPU::instructionPrologue);
-    } else {
-      //brk();
-      mov32(BranchReg(nstate), imm(Branch::Step));
-      mov64(reg(0), BranchReg(pc));
-      mov64(BranchReg(npc), reg(0));
-      add64(BranchReg(pc), reg(0), imm(4));
-      //brk();
     }
     bool branched = emitEXECUTE(instruction);
     if(unlikely(instruction == 0x1000'ffff  //beq 0,0,<pc>
@@ -79,8 +78,6 @@ auto CPU::Recompiler::emit(u32 vaddr, u32 address, bool singleInstruction) -> Bl
 //print(hex(PC, 8L), " ", instructions, " ", size(), "\n");
   return block;
 }
-
-#undef BranchReg
 
 #define Sa  (instruction >>  6 & 31)
 #define Rdn (instruction >> 11 & 31)
@@ -2175,6 +2172,9 @@ auto CPU::Recompiler::emitCOP2(u32 instruction) -> bool {
   return 0;
 }
 
+#undef IpuBase
+#undef IpuReg
+#undef BranchReg
 #undef Sa
 #undef Rdn
 #undef Rtn
@@ -2182,8 +2182,6 @@ auto CPU::Recompiler::emitCOP2(u32 instruction) -> bool {
 #undef Fdn
 #undef Fsn
 #undef Ftn
-#undef IpuBase
-#undef IpuReg
 #undef Rd
 #undef Rt
 #undef Rt32
