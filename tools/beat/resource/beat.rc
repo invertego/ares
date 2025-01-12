@@ -1,0 +1,4 @@
+#ifndef EXCLUDE_MANIFEST_FROM_RC
+1 24 "beat.Manifest"
+#endif
+2 ICON DISCARDABLE "beat.ico"
