@@ -87,7 +87,7 @@ auto ARM7TDMI::armInstructionDataImmediateShift
 
 auto ARM7TDMI::armInstructionDataRegisterShift
 (n4 m, n2 type, n4 s, n4 d, n4 n, n1 save, n4 mode) -> void {
-  n8  rs = r(s) + (s == 15 ? 4 : 0);
+  n8  rs = r(s) /*+ (s == 15 ? 4 : 0)*/;  //arm_data_proc_register_shift
   n32 rn = r(n) + (n == 15 ? 4 : 0);
   n32 rm = r(m) + (m == 15 ? 4 : 0);
   carry = cpsr().c;
@@ -111,7 +111,7 @@ auto ARM7TDMI::armInstructionLoadImmediate
   rd = load((half ? Half : Byte) | Nonsequential | Signed, rn);
   if(pre == 0) rn = up ? rn + immediate : rn - immediate;
 
-  if(pre == 0 || writeback) r(n) = rn;
+  if(pre == 0 || writeback) r(n) = rn + (n == 15 ? 4 : 0);  //arm_ldrsb_ldrsh
   r(d) = rd;
 }
 
@@ -125,15 +125,17 @@ auto ARM7TDMI::armInstructionLoadRegister
   rd = load((half ? Half : Byte) | Nonsequential | Signed, rn);
   if(pre == 0) rn = up ? rn + rm : rn - rm;
 
-  if(pre == 0 || writeback) r(n) = rn;
+  if(pre == 0 || writeback) r(n) = rn + (n == 15 ? 4 : 0);  //arm_ldrsb_ldrsh
   r(d) = rd;
 }
 
 auto ARM7TDMI::armInstructionMemorySwap
 (n4 m, n4 d, n4 n, n1 byte) -> void {
+  n32 rn = r(n) + (n == 15 ? 4 : 0);  //arm_swp
+  n32 rm = r(m) + (m == 15 ? 4 : 0);  //arm_swp
   lock();
-  n32 word = load((byte ? Byte : Word) | Nonsequential, r(n));
-  store((byte ? Byte : Word) | Nonsequential, r(n), r(m));
+  n32 word = load((byte ? Byte : Word) | Nonsequential, rn);
+  store((byte ? Byte : Word) | Nonsequential, rn, rm);
   r(d) = word;
   unlock();
 }
@@ -141,14 +143,14 @@ auto ARM7TDMI::armInstructionMemorySwap
 auto ARM7TDMI::armInstructionMoveHalfImmediate
 (n8 immediate, n4 d, n4 n, n1 mode, n1 writeback, n1 up, n1 pre) -> void {
   n32 rn = r(n);
-  n32 rd = r(d);
+  n32 rd = r(d) + (d == 15 ? 4 : 0); //arm_ldrh_strh
 
   if(pre == 1) rn = up ? rn + immediate : rn - immediate;
   if(mode == 1) rd = load(Half | Nonsequential, rn);
   if(mode == 0) store(Half | Nonsequential, rn, rd);
   if(pre == 0) rn = up ? rn + immediate : rn - immediate;
 
-  if(pre == 0 || writeback) r(n) = rn;
+  if(pre == 0 || writeback) r(n) = rn + (n == 15 ? 4 : 0);  //arm_ldrh_strh
   if(mode == 1) r(d) = rd;
 }
 
@@ -156,14 +158,14 @@ auto ARM7TDMI::armInstructionMoveHalfRegister
 (n4 m, n4 d, n4 n, n1 mode, n1 writeback, n1 up, n1 pre) -> void {
   n32 rn = r(n);
   n32 rm = r(m);
-  n32 rd = r(d);
+  n32 rd = r(d) + (d == 15 ? 4 : 0); //arm_ldrh_strh
 
   if(pre == 1) rn = up ? rn + rm : rn - rm;
   if(mode == 1) rd = load(Half | Nonsequential, rn);
   if(mode == 0) store(Half | Nonsequential, rn, rd);
   if(pre == 0) rn = up ? rn + rm : rn - rm;
 
-  if(pre == 0 || writeback) r(n) = rn;
+  if(pre == 0 || writeback) r(n) = rn + (n == 15 ? 4 : 0);  //arm_ldrh_strh
   if(mode == 1) r(d) = rd;
 }
 
@@ -177,7 +179,7 @@ auto ARM7TDMI::armInstructionMoveImmediateOffset
   if(mode == 0) store((byte ? Byte : Word) | Nonsequential, rn, rd);
   if(pre == 0) rn = up ? rn + immediate : rn - immediate;
 
-  if(pre == 0 || writeback) r(n) = rn;
+  if(pre == 0 || writeback) r(n) = rn + (n == 15 ? 4 : 0);  //arm_ldr_str_immediate_offset
   if(mode == 1) r(d) = rd;
 }
 
@@ -235,7 +237,7 @@ auto ARM7TDMI::armInstructionMoveMultiple
 auto ARM7TDMI::armInstructionMoveRegisterOffset
 (n4 m, n2 type, n5 shift, n4 d, n4 n, n1 mode, n1 writeback, n1 byte, n1 up, n1 pre) -> void {
   n32 rm = r(m);
-  n32 rd = r(d);
+  n32 rd = r(d) + (d == 15 ? 4 : 0);  //arm_ldr_str_register_offset
   n32 rn = r(n);
   carry = cpsr().c;
 
@@ -251,7 +253,7 @@ auto ARM7TDMI::armInstructionMoveRegisterOffset
   if(mode == 0) store((byte ? Byte : Word) | Nonsequential, rn, rd);
   if(pre == 0) rn = up ? rn + rm : rn - rm;
 
-  if(pre == 0 || writeback) r(n) = rn;
+  if(pre == 0 || writeback) r(n) = rn + (n == 15 ? 4 : 0);  //arm_ldr_str_register_offset
   if(mode == 1) r(d) = rd;
 }
 
@@ -274,14 +276,17 @@ auto ARM7TDMI::armInstructionMoveToStatusFromRegister
 
 auto ARM7TDMI::armInstructionMultiply
 (n4 m, n4 s, n4 n, n4 d, n1 save, n1 accumulate) -> void {
+  n32 rn = r(n) + (n == 15 ? 4 : 0);  //arm_mul_mla
+  n32 rm = r(m) + (m == 15 ? 4 : 0);  //arm_mul_mla
+  n32 rs = r(s) + (s == 15 ? 4 : 0);  //arm_mul_mla
   if(accumulate) idle();
-  r(d) = MUL(accumulate ? r(n) : 0, r(m), r(s));
+  r(d) = MUL(accumulate ? rn : 0_n32, rm, rs);
 }
 
 auto ARM7TDMI::armInstructionMultiplyLong
 (n4 m, n4 s, n4 l, n4 h, n1 save, n1 accumulate, n1 sign) -> void {
-  n64 rm = r(m);
-  n64 rs = r(s);
+  n64 rm = r(m) + (m == 15 ? 4 : 0);  //arm_mull_mlal
+  n64 rs = r(s) + (s == 15 ? 4 : 0);  //arm_mull_mlal
 
   idle();
   idle();
@@ -299,8 +304,10 @@ auto ARM7TDMI::armInstructionMultiplyLong
     if(rs >> 24) idle();
   }
 
+  n64 rh = r(h) + (h == 15 ? 4 : 0);  //arm_mull_mlal
+  n64 rl = r(l) + (l == 15 ? 4 : 0);  //arm_mull_mlal
   n64 rd = rm * rs;
-  if(accumulate) rd += (n64)r(h) << 32 | (n64)r(l) << 0;
+  if(accumulate) rd += rh << 32 | rl << 0;
 
   r(l) = rd >>  0;
   r(h) = rd >> 32;
