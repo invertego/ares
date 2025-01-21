@@ -125,15 +125,6 @@ struct CPU : ares::ARM7TDMI {
 } cpu;
 
 auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
-
-  //tests/v1/arm_mrs.json
-  //mrs pc,...
-  //test seems bugged, should reload pipeline but doesn't...
-  if((test.opcode & 0b0000'11111011'0000'1111'0000'1111'0000) == 0b0000'00010000'0000'1111'0000'0000'0000) {
-    //print(hex(test.base_addr, 8L), "  ", hex(test.opcode, 2 * 4), "  ", disassembleInstruction(n32(test.base_addr), boolean(false)), "\n");
-    return skip;
-  }
-
   power(test);
 
   const auto& is = test.initial;
@@ -177,6 +168,33 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
 
   const bool thumb = processor.cpsr.t;
   const u32 L = thumb ? 2 : 4;
+
+  //tests/v1/arm_mrs.json
+  //mrs pc,...
+  //test seems bugged, should reload pipeline but doesn't...
+  if(!thumb && (test.opcode & 0b0000'11111011'0000'1111'0000'1111'0000) == 0b0000'00010000'0000'1111'0000'0000'0000) {
+    //print(hex(test.base_addr, 8L), "  ", hex(test.opcode, 2 * 4), "  ", disassembleInstruction(n32(test.base_addr), boolean(false)), "\n");
+    return skip;
+  }
+
+  //tests/v1/arm_mul_mla.json
+  //r15 tests incorrectly apply +4 offsets to rn, rm, and rs
+  //since the multiplier is known to read in the same register(s?) multiple times,
+  //this may result in corrupted results on hardware when the lower 8 bits of r15 are 0xfc (needs testing)
+  if(!thumb && (test.opcode & 0b00001111110000000000000011110000) == 0b0000'000000'00000000000000'1001'0000) {
+    if((test.opcode & 0x0000F000) == 0x0000F000) return skip;
+    if((test.opcode & 0x00000F00) == 0x00000F00) return skip;
+    if((test.opcode & 0x0000000F) == 0x0000000F) return skip;
+  }
+
+  //tests/v1/arm_mull_mlal.json
+  //r15 tests incorrectly apply +4 offsets to rm and rs
+  //since the multiplier is known to read in the same register(s?) multiple times,
+  //this may result in corrupted results on hardware when the lower 8 bits of r15 are 0xfc (needs testing)
+  if(!thumb && (test.opcode & 0b00001111100000000000000011110000) == 0b0000'00001'000000000000000'1001'0000) {
+    if((test.opcode & 0x00000F00) == 0x00000F00) return skip;
+    if((test.opcode & 0x0000000F) == 0x0000000F) return skip;
+  }
 
   //processor.carry = ?;
   //processor.irq = ?;

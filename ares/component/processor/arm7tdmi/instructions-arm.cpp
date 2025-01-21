@@ -88,7 +88,7 @@ auto ARM7TDMI::armInstructionDataImmediateShift
 
 auto ARM7TDMI::armInstructionDataRegisterShift
 (n4 m, n2 type, n4 s, n4 d, n4 n, n1 save, n4 mode) -> void {
-  n8  rs = r(s) /*+ (s == 15 ? 4 : 0)*/;  //arm_data_proc_register_shift
+  n8  rs = r(s);  //arm_data_proc_register_shift
   n32 rn = r(n) + (n == 15 ? 4 : 0);
   n32 rm = r(m) + (m == 15 ? 4 : 0);
   carry = cpsr().c;
@@ -191,7 +191,7 @@ auto ARM7TDMI::armInstructionMoveMultiple
   n32 rnEnd;
   if(up == 1) rnEnd = r(n) + bitCount * 4;  //IA,IB
   if(up == 0) rnEnd = r(n) - bitCount * 4;  //DA,DB
-  print("n ", n, " mode ", mode, " writeback ", writeback, " up ", up, " pre ", pre, " type ", type, "\n");
+  //print("n ", n, " mode ", mode, " writeback ", writeback, " up ", up, " pre ", pre, " type ", type, "\n");
   if(pre == 0 && up == 1) rn = rn + 0;  //IA
   if(pre == 1 && up == 1) rn = rn + 4;  //IB
   if(pre == 1 && up == 0) rn = rn - bitCount * 4 + 0;  //DB
@@ -210,17 +210,28 @@ auto ARM7TDMI::armInstructionMoveMultiple
   u32 sequential = Nonsequential;
   if(!list) {
     if(mode == 1) r(15) = read(Word | sequential, rn);
-    if(mode == 0) write(Word | sequential, rn, r(15) + 4);
+    if(mode == 0) {
+      write(Word | sequential, rn, r(15) + 4);
+      //writeback occurs after first access
+      if(writeback) {
+        r(n) = rnEnd;
+      }
+    }
   } else {
+    bool wroteBack = false;
     for(u32 m : range(16)) {
       if(!list.bit(m)) continue;
       if(mode == 1) r(m) = read(Word | sequential, rn);
-      if(mode == 0) write(Word | sequential, rn, r(m) + (!(n == 15 && writeback) && m == 15 ? 4 : 0));
+      if(mode == 0) {
+        write(Word | sequential, rn, r(m) + (!(n == 15 && writeback) && m == 15 ? 4 : 0));
+        if(!wroteBack && writeback) {
+          //writeback occurs after first access
+          r(n) = rnEnd;
+          wroteBack = true;
+        }
+      }
       rn += 4;
       sequential = Sequential;
-      if(writeback && mode == 0) {
-        r(n) = rnEnd;
-      }
     }
   }
 
@@ -233,10 +244,6 @@ auto ARM7TDMI::armInstructionMoveMultiple
     }
   } else {
     pipeline.nonsequential = true;
-  }
-
-  if(writeback && mode == 0) {
-    //r(n) = rnEnd;
   }
 }
 
@@ -282,17 +289,14 @@ auto ARM7TDMI::armInstructionMoveToStatusFromRegister
 
 auto ARM7TDMI::armInstructionMultiply
 (n4 m, n4 s, n4 n, n4 d, n1 save, n1 accumulate) -> void {
-  n32 rn = r(n) + (n == 15 ? 4 : 0);  //arm_mul_mla
-  n32 rm = r(m) + (m == 15 ? 4 : 0);  //arm_mul_mla
-  n32 rs = r(s) + (s == 15 ? 4 : 0);  //arm_mul_mla
   if(accumulate) idle();
-  r(d) = MUL(accumulate ? rn : 0_n32, rm, rs);
+  r(d) = MUL(accumulate ? r(n) : 0, r(m), r(s));
 }
 
 auto ARM7TDMI::armInstructionMultiplyLong
 (n4 m, n4 s, n4 l, n4 h, n1 save, n1 accumulate, n1 sign) -> void {
-  n64 rm = r(m) + (m == 15 ? 4 : 0);  //arm_mull_mlal
-  n64 rs = r(s) + (s == 15 ? 4 : 0);  //arm_mull_mlal
+  n64 rm = r(m);
+  n64 rs = r(s);
 
   idle();
   idle();

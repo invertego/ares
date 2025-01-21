@@ -136,15 +136,26 @@ auto ARM7TDMI::thumbInstructionMoveMultiple
   u32 sequential = Nonsequential;
   if(!list) {
     if(mode == 1) r(15) = read(Word | sequential, rn);
-    if(mode == 0) write(Word | sequential, rn, r(15) + 2);
+    if(mode == 0) {
+      write(Word | sequential, rn, r(15) + 2);
+      //writeback occurs after first access
+      r(n) = rnEnd;
+    }
   } else {
+    bool wroteBack = false;
     for(u32 m : range(8)) {
       if(!list.bit(m)) continue;
       if(mode == 1) r(m) = read(Word | sequential, rn);  //LDMIA
-      if(mode == 0) write(Word | sequential, rn, r(m));  //STMIA
+      if(mode == 0) {
+        write(Word | sequential, rn, r(m));  //STMIA
+        //writeback occurs after first access
+        if(!wroteBack) {
+          r(n) = rnEnd;
+          wroteBack = true;
+        }
+      }
       rn += 4;
       sequential = Sequential;
-      if(mode == 0) r(n) = rnEnd;
     }
   }
 
@@ -152,7 +163,6 @@ auto ARM7TDMI::thumbInstructionMoveMultiple
     idle();
   } else {
     pipeline.nonsequential = true;
-    r(n) = rnEnd;
   }
 }
 
