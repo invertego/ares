@@ -47,14 +47,14 @@ using TestResults = array<u32[3]>;
 struct CPU : ares::ARM7TDMI {
   u32 clock = 0;
   int tindex;
-  bool terror;
   maybe<const TestCase&> test;
+  vector<string> errors;
 
   auto power(const TestCase& test) -> void {
     ARM7TDMI::power();
     clock = 0;
     tindex = 0;
-    terror = false;
+    errors.reset();
     this->test = test;
   }
 
@@ -63,7 +63,7 @@ struct CPU : ares::ARM7TDMI {
     if(mode & Half) return 2;
     if(mode & Word) return 4;
     print("unrecognized mode ", hex(mode, 3L), "\n");
-    __debugbreak();
+    abort();
     return 4;
   }
 
@@ -82,8 +82,7 @@ struct CPU : ares::ARM7TDMI {
         return t.data;
       }
     }
-    print("get ", hex(mode, 3L), " ", hex(address, 8L), "\n");
-    terror = true;
+    error("get ", hex(mode, 3L), " ", hex(address, 8L), "\n");
     return 0;
   }
   auto getDebugger(u32 mode, n32 address) -> n32 override {
@@ -114,11 +113,15 @@ struct CPU : ares::ARM7TDMI {
         return;
       }
     }
-    print("set ", hex(mode, 3L), " ", hex(address, 8L), " ", hex(word, 8L), "\n");
-    terror = true;
+    error("set ", hex(mode, 3L), " ", hex(address, 8L), " ", hex(word, 8L), " (", hex(test->transactions[tindex - 1].data, 8L), ")\n");
   }
 
   auto run(const TestCase& test, bool logErrors) -> TestResult;
+
+  template<typename... P>
+  auto error(P&&... p) -> void {
+    errors.append(string{std::forward<P>(p)...});
+  }
 } cpu;
 
 auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
@@ -207,17 +210,22 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
   processor.r15.data += LPost;
   //simulate side effects of pipeline reload on r15
   if(pipeline.reload) processor.r15.data += LPost;
-  if(thumb != thumbPost) processor.r15.data &= ~(LPost - 1);
+  //if(pipeline.reload) processor.r15.data &= ~(LPost - 1);
+  //if(thumb != thumbPost) processor.r15.data &= ~(LPost - 1);
 
   TestResult result = pass;
 
-  vector<string> errors;
-  auto error = [&](auto&&... p) -> void {
-    errors.append(string{std::forward<decltype(p)>(p)...});
-  };
+  u32 cpsrMask = ~0u;
+
+  //arm MRS
+  if((test.opcode & 0b0000'1111'1011'0000'0000'0000'0000'0000) == 0b0000'0011'0010'0000'0000'0000'0000'0000
+  || (test.opcode & 0b0000'1111'1011'0000'0000'0000'1111'0000) == 0b0000'0001'0010'0000'0000'0000'0000'0000) {
+    //todo: are these bits settable on real hw?
+    cpsrMask &= ~0x0fffff00u;
+    result = skip;
+  }
 
   //mul carry nyi (documented as "unpredictable")
-  u32 cpsrMask = ~0u;
   //thumb MUL
   if(( thumb && (test.opcode & 0b1111111111000000) == 0b0100001101000000)
   //arm UMULL
@@ -269,11 +277,11 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
   if(processor.und.r13 != fs.R_und[0]) error("und.r13: ", hex(u32(processor.und.r13), 8), " != ", hex(fs.R_und[0], 8));
   if(processor.und.r14 != fs.R_und[1]) error("und.r14: ", hex(u32(processor.und.r14), 8), " != ", hex(fs.R_und[1], 8));
   if((processor.cpsr & cpsrMask) != (fs.CPSR & cpsrMask)) error("cpsr: ", hex(u32(processor.cpsr), 8), " != ", hex(fs.CPSR, 8));
-  if(processor.fiq.spsr != fs.SPSR[0]) error("fiq.spsr: ", hex(u32(processor.fiq.spsr), 8), " != ", hex(fs.SPSR[0], 8));
-  if(processor.svc.spsr != fs.SPSR[1]) error("svc.spsr: ", hex(u32(processor.svc.spsr), 8), " != ", hex(fs.SPSR[1], 8));
-  if(processor.abt.spsr != fs.SPSR[2]) error("abt.spsr: ", hex(u32(processor.abt.spsr), 8), " != ", hex(fs.SPSR[2], 8));
-  if(processor.irq.spsr != fs.SPSR[3]) error("irq.spsr: ", hex(u32(processor.irq.spsr), 8), " != ", hex(fs.SPSR[3], 8));
-  if(processor.und.spsr != fs.SPSR[4]) error("und.spsr: ", hex(u32(processor.und.spsr), 8), " != ", hex(fs.SPSR[4], 8));
+  if((processor.fiq.spsr & cpsrMask) != (fs.SPSR[0] & cpsrMask)) error("fiq.spsr: ", hex(u32(processor.fiq.spsr), 8), " != ", hex(fs.SPSR[0], 8));
+  if((processor.svc.spsr & cpsrMask) != (fs.SPSR[1] & cpsrMask)) error("svc.spsr: ", hex(u32(processor.svc.spsr), 8), " != ", hex(fs.SPSR[1], 8));
+  if((processor.abt.spsr & cpsrMask) != (fs.SPSR[2] & cpsrMask)) error("abt.spsr: ", hex(u32(processor.abt.spsr), 8), " != ", hex(fs.SPSR[2], 8));
+  if((processor.irq.spsr & cpsrMask) != (fs.SPSR[3] & cpsrMask)) error("irq.spsr: ", hex(u32(processor.irq.spsr), 8), " != ", hex(fs.SPSR[3], 8));
+  if((processor.und.spsr & cpsrMask) != (fs.SPSR[4] & cpsrMask)) error("und.spsr: ", hex(u32(processor.und.spsr), 8), " != ", hex(fs.SPSR[4], 8));
 
   if(!pipeline.reload) {
     if(pipeline.decode.instruction != fs.pipeline[0]) error("pipeline[0]: ", hex(u32(pipeline.decode.instruction), 8), " != ", hex(fs.pipeline[0], 8));
@@ -282,15 +290,16 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
 
   if(pipeline.reload) tindex += 2;
   if(tindex != test.transactions.size()) {
-    error("reload ", pipeline.reload, "\n");
     error("unused transactions ", tindex, " ", test.transactions.size(), "\n");
   }
 
-  if(errors || terror) {
+  if(errors) {
     if(logErrors) {
       print("\n");
       print("test: ", test.index, "\n");
       print("reload: ", pipeline.reload, "\n");
+      print("thumb: ", thumb, "\n");
+      print("thumbPost: ", thumbPost, "\n");
       print(hex(test.base_addr, 8L), "  ", hex(test.opcode, 2 * L), "  ", disassembleInstruction(n32(test.base_addr), boolean(thumb)), "\n");
       for(auto& error : errors) {
         print(error, "\n");

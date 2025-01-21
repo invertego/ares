@@ -23,10 +23,11 @@ auto ARM7TDMI::thumbInstructionALU
 
 auto ARM7TDMI::thumbInstructionALUExtended
 (n4 d, n4 m, n2 mode) -> void {
+  //thumb_add_cmp_mov_hi
   switch(mode) {
-  case 0: r(d) = r(d) + r(m); break;  //ADD
-  case 1: SUB(r(d), r(m), 1); break;  //SUBS
-  case 2: r(d) = r(m); break;  //MOV
+  case 0: r(d) = r(d) + r(m); if(d == 15) r(15).data &= ~1; break;  //ADD
+  case 1: SUB(r(d), r(m), 1); break;  //CMP
+  case 2: r(d) = r(m); if(d == 15) r(15).data &= ~1; break;  //MOV
   }
 }
 
@@ -66,7 +67,7 @@ auto ARM7TDMI::thumbInstructionBranchExchange
 (n4 m) -> void {
   n32 address = r(m);
   cpsr().t = address.bit(0);
-  r(15) = address;
+  r(15) = address & ~1;  //thumb_bx
 }
 
 auto ARM7TDMI::thumbInstructionBranchFarPrefix
@@ -76,7 +77,7 @@ auto ARM7TDMI::thumbInstructionBranchFarPrefix
 
 auto ARM7TDMI::thumbInstructionBranchFarSuffix
 (n11 displacement) -> void {
-  r(15) = r(14) + (displacement * 2);
+  r(15) = (r(14) + (displacement * 2)) & ~1;  //thumb_bl_suffix
   r(14) = pipeline.decode.address | 1;
 }
 
@@ -128,6 +129,7 @@ auto ARM7TDMI::thumbInstructionMoveMultiple
 (n8 list, n3 n, n1 mode) -> void {
   n32 rn = r(n);
   n32 bitCount = list ? bit::count(list) : 16;
+  n32 rnEnd = r(n) + bitCount * 4;
 
   if(mode == 1 && !list.bit(n)) r(n) = r(n) + bitCount * 4;
 
@@ -142,6 +144,7 @@ auto ARM7TDMI::thumbInstructionMoveMultiple
       if(mode == 0) write(Word | sequential, rn, r(m));  //STMIA
       rn += 4;
       sequential = Sequential;
+      if(mode == 0) r(n) = rnEnd;
     }
   }
 
@@ -149,7 +152,7 @@ auto ARM7TDMI::thumbInstructionMoveMultiple
     idle();
   } else {
     pipeline.nonsequential = true;
-    r(n) = r(n) + bitCount * 4;
+    r(n) = rnEnd;
   }
 }
 
@@ -218,7 +221,8 @@ auto ARM7TDMI::thumbInstructionStackMultiple
     }
   }
   if(lrpc) {
-    if(mode == 1) r(15) = read(Word | sequential, sp);  //POP
+    //thumb_push_pop
+    if(mode == 1) r(15) = read(Word | sequential, sp) & ~1;  //POP
     if(mode == 0) write(Word | sequential, sp, r(14));  //PUSH
     sp += 4;
   }
