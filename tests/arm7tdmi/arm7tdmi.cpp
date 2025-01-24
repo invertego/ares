@@ -196,6 +196,20 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
     if((test.opcode & 0x0000000F) == 0x0000000F) return skip;
   }
 
+  //tests/v1/arm_ldr_str_immediate_offset.json
+  //r15 tests incorrectly apply +4 offset on writeback to rn
+  if(!thumb && (test.opcode & 0b00001110000011110000000000000000) == 0b0000'010'00000'1111'0000000000000000) {
+    if((test.opcode & 0x0F000000) == 0x04000000) return skip;
+    if((test.opcode & 0x00020000) == 0x00020000) return skip;
+  }
+
+  //tests/v1/arm_ldr_str_register_offset.json
+  //r15 tests incorrectly apply +4 offset on writeback to rn
+  if(!thumb && (test.opcode & 0b00001110000011110000000000010000) == 0b0000'011'00000'1111'00000000000'0'0000) {
+    if((test.opcode & 0x0F000000) == 0x04000000) return skip;
+    if((test.opcode & 0x00020000) == 0x00020000) return skip;
+  }
+
   //processor.carry = ?;
   //processor.irq = ?;
 

@@ -180,7 +180,7 @@ auto ARM7TDMI::armInstructionMoveImmediateOffset
   if(mode == 0) store((byte ? Byte : Word) | Nonsequential, rn, rd);
   if(pre == 0) rn = up ? rn + immediate : rn - immediate;
 
-  if(pre == 0 || writeback) r(n) = rn + (n == 15 ? 4 : 0);  //arm_ldr_str_immediate_offset
+  if(pre == 0 || writeback) r(n) = rn;
   if(mode == 1) r(d) = rd;
 }
 
@@ -266,7 +266,7 @@ auto ARM7TDMI::armInstructionMoveRegisterOffset
   if(mode == 0) store((byte ? Byte : Word) | Nonsequential, rn, rd);
   if(pre == 0) rn = up ? rn + rm : rn - rm;
 
-  if(pre == 0 || writeback) r(n) = rn + (n == 15 ? 4 : 0);  //arm_ldr_str_register_offset
+  if(pre == 0 || writeback) r(n) = rn;
   if(mode == 1) r(d) = rd;
 }
 
