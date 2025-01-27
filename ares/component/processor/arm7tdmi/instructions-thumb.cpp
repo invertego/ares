@@ -1,23 +1,23 @@
 auto ARM7TDMI::thumbInstructionALU
 (n3 d, n3 m, n4 mode) -> void {
-  //thumb_data_proc
+  carry = cpsr().c;  //thumb_data_proc
   switch(mode) {
-  case  0: carry = cpsr().c; r(d) = BIT(r(d) & r(m)); break;  //AND (nc)
-  case  1: carry = cpsr().c; r(d) = BIT(r(d) ^ r(m)); break;  //EOR (nc)
-  case  2: r(d) = BIT(LSL(r(d), r(m))); break;  //LSL (c)
-  case  3: r(d) = BIT(LSR(r(d), r(m))); break;  //LSR (c)
-  case  4: r(d) = BIT(ASR(r(d), r(m))); break;  //ASR (c)
+  case  0: r(d) = BIT(r(d) & r(m)); break;  //AND
+  case  1: r(d) = BIT(r(d) ^ r(m)); break;  //EOR
+  case  2: r(d) = BIT(LSL(r(d), r(m))); break;  //LSL
+  case  3: r(d) = BIT(LSR(r(d), r(m))); break;  //LSR
+  case  4: r(d) = BIT(ASR(r(d), r(m))); break;  //ASR
   case  5: r(d) = ADD(r(d), r(m), cpsr().c); break;  //ADC
   case  6: r(d) = SUB(r(d), r(m), cpsr().c); break;  //SBC
-  case  7: r(d) = BIT(ROR(r(d), r(m))); break;  //ROR (c)
-  case  8: carry = cpsr().c;        BIT(r(d) & r(m)); break;  //TST (nc)
-  case  9: r(d) = SUB(0, r(m), 1); break;  //NEG (c)
-  case 10:        SUB(r(d), r(m), 1); break;  //CMP (c)
-  case 11:        ADD(r(d), r(m), 0); break;  //CMN (c)
-  case 12: carry = cpsr().c; r(d) = BIT(r(d) | r(m)); break;  //ORR (nc)
-  case 13: r(d) = MUL(0, r(m), r(d)); break;  //MUL (*)
-  case 14: carry = cpsr().c; r(d) = BIT(r(d) & ~r(m)); break;  //BIC (nc)
-  case 15: carry = cpsr().c; r(d) = BIT(~r(m)); break;  //MVN (nc)
+  case  7: r(d) = BIT(ROR(r(d), r(m))); break;  //ROR
+  case  8:        BIT(r(d) & r(m)); break;  //TST
+  case  9: r(d) = SUB(0, r(m), 1); break;  //NEG
+  case 10:        SUB(r(d), r(m), 1); break;  //CMP
+  case 11:        ADD(r(d), r(m), 0); break;  //CMN
+  case 12: r(d) = BIT(r(d) | r(m)); break;  //ORR
+  case 13: r(d) = MUL(0, r(m), r(d)); break;  //MUL
+  case 14: r(d) = BIT(r(d) & ~r(m)); break;  //BIC
+  case 15: r(d) = BIT(~r(m)); break;  //MVN
   }
 }
 
@@ -94,9 +94,9 @@ auto ARM7TDMI::thumbInstructionBranchTest
 
 auto ARM7TDMI::thumbInstructionImmediate
 (n8 immediate, n3 d, n2 mode) -> void {
+  carry = cpsr().c;  //thumb_mov_cmp_add_sub
   switch(mode) {
-  //thumb_mov_cmp_add_sub
-  case 0: carry = cpsr().c; r(d) = BIT(immediate); break;  //MOV
+  case 0: r(d) = BIT(immediate); break;  //MOV
   case 1:        SUB(r(d), immediate, 1); break;  //CMP
   case 2: r(d) = ADD(r(d), immediate, 0); break;  //ADD
   case 3: r(d) = SUB(r(d), immediate, 1); break;  //SUB
@@ -131,7 +131,7 @@ auto ARM7TDMI::thumbInstructionMoveMultiple
   n32 bitCount = list ? bit::count(list) : 16;
   n32 rnEnd = r(n) + bitCount * 4;
 
-  if(mode == 1 && !list.bit(n)) r(n) = r(n) + bitCount * 4;
+  if(mode == 1 && !list.bit(n)) r(n) = rnEnd;
 
   u32 sequential = Nonsequential;
   if(!list) {

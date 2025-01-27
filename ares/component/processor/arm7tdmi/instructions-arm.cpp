@@ -190,7 +190,6 @@ auto ARM7TDMI::armInstructionMoveMultiple
   n32 rnEnd;
   if(up == 1) rnEnd = r(n) + bitCount * 4;  //IA,IB
   if(up == 0) rnEnd = r(n) - bitCount * 4;  //DA,DB
-  //print("n ", n, " mode ", mode, " writeback ", writeback, " up ", up, " pre ", pre, " type ", type, "\n");
   if(pre == 0 && up == 1) rn = rn + 0;  //IA
   if(pre == 1 && up == 1) rn = rn + 4;  //IB
   if(pre == 1 && up == 0) rn = rn - bitCount * 4 + 0;  //DB
@@ -202,9 +201,7 @@ auto ARM7TDMI::armInstructionMoveMultiple
   if(type && mode == 0) usr = true;
   if(usr) cpsr().m = PSR::USR;
 
-  if(writeback && mode == 1 && !list.bit(n)) {
-    r(n) = rnEnd;
-  }
+  if(writeback && mode == 1 && !list.bit(n)) r(n) = rnEnd;
 
   u32 sequential = Nonsequential;
   if(!list) {
@@ -212,9 +209,7 @@ auto ARM7TDMI::armInstructionMoveMultiple
     if(mode == 0) {
       write(Word | sequential, rn, r(15) + 4);
       //writeback occurs after first access
-      if(writeback) {
-        r(n) = rnEnd;
-      }
+      if(writeback) r(n) = rnEnd;
     }
   } else {
     bool wroteBack = false;
