@@ -7,6 +7,15 @@ using namespace nall;
 #include <ares/ares.hpp>
 #include <component/processor/arm7tdmi/arm7tdmi.hpp>
 
+namespace Access {
+enum {
+  Sequential = 1,
+  Code = 2,
+  Dma = 4,
+  Lock = 8
+};
+}
+
 struct TestState {
   u32 R[16];
   u32 R_fiq[7];
@@ -46,9 +55,9 @@ using TestResults = array<u32[3]>;
 
 struct CPU : ares::ARM7TDMI {
   u32 clock = 0;
-  int tindex;
-  maybe<const TestCase&> test;
+  int tindex = 0;
   vector<string> errors;
+  maybe<const TestCase&> test;
 
   auto power(const TestCase& test) -> void {
     ARM7TDMI::power();
@@ -56,6 +65,26 @@ struct CPU : ares::ARM7TDMI {
     tindex = 0;
     errors.reset();
     this->test = test;
+  }
+
+  auto step(u32 clocks) -> void override { clock += clocks; }
+  auto sleep() -> void override {}
+  auto get(u32 mode, n32 address) -> n32 override {
+    if(!(mode & Prefetch)) mode |= Load;  //todo: fix this in ares
+    if(auto data = matchTransaction(mode, address)) return *data;
+    error("read: mode ", hex(mode, 3L), " address ", hex(address, 8L), "\n");
+    return 0;
+  }
+  auto getDebugger(u32 mode, n32 address) -> n32 override {
+    //the ares disassembler can call this for non-opcode data (pc-relative loads),
+    //some of which could be resolved by scanning the transaction log if desired.
+    if(address == test->base_addr) return test->opcode;
+    return 0;
+  }
+  auto set(u32 mode, n32 address, n32 word) -> void override {
+    mode |= Store;  //todo: fix this in ares
+    if(matchTransaction(mode, address, word)) return;
+    error("write: mode ", hex(mode, 3L), " address ", hex(address, 8L), " word ", hex(word, 8L), "\n");
   }
 
   auto memSize(u32 mode) -> u32 {
@@ -67,53 +96,34 @@ struct CPU : ares::ARM7TDMI {
     return 4;
   }
 
-  auto step(u32 clocks) -> void override { clock += clocks; }
-  auto sleep() -> void override {}
-  auto get(u32 mode, n32 address) -> n32 override {
+  auto matchTransaction(u32 mode, n32 address, n32 word = 0) -> maybe<u32> {
+    maybe<u32> result;
     u32 size = memSize(mode);
-    //for(auto& t : test->transactions) {
+    u32 data = word & (~0u >> (32 - size * 8));
     if(tindex < test->transactions.size()) {
       auto& t = test->transactions[tindex++];
       if((mode & Prefetch) && t.kind == 0 && t.size == size && t.addr == address) {
-        //print("  return ", hex(t.data, 8L), "\n");
-        return t.data;
+        result = t.data;
       }
-      if(!(mode & Prefetch) && t.kind == 1 && t.size == size && t.addr == address) {
-        return t.data;
+      if((mode & Load) && t.kind == 1 && t.size == size && t.addr == address) {
+        result = t.data;
       }
-    }
-    error("get ", hex(mode, 3L), " ", hex(address, 8L), "\n");
-    return 0;
-  }
-  auto getDebugger(u32 mode, n32 address) -> n32 override {
-    if(address >= test->base_addr && address < test->base_addr + 4) {
-      u32 offset = address - test->base_addr;
-      if(offset > 0) print("getDebugger offset ", offset, "\n");
-      if(mode & Byte) {
-        return u8(test->opcode >> ((offset & 3) * 8));
-      } else if(mode & Half) {
-        return u16(test->opcode >> ((offset & 2) * 8));
-      } else if(mode & Word) {
-        return test->opcode;
-      } else {
-        print("getDebugger mode ", hex(mode, 3L), " ", hex(address, 8L), "\n");
-        return 0;
+      if((mode & Store) && t.kind == 2 && t.size == size && t.addr == address) {
+        if(t.data == data) {
+          result = t.data;
+        } else {
+          error("write: data ", hex(data, 2 * size), " != ", hex(t.data, 2 * size), ")\n");
+        }
+      }
+      if(result) {
+        //don't check sequential unless we got a result, otherwise it's just noise
+        if(!(mode & Sequential) != !(t.access & Access::Sequential)) {
+          error("write: nonsequential ", !(mode & Sequential), " != ", !(t.access & Access::Sequential), "\n");
+          result = nothing;
+        }
       }
     }
-    print("getDebugger address ", hex(mode, 3L), " ", hex(address, 8L), "\n");
-    return 0;
-  }
-  auto set(u32 mode, n32 address, n32 word) -> void override {
-    u32 size = memSize(mode);
-    u32 mask = ~0u >> (32 - size * 8);
-    //for(auto& t : test->transactions) {
-    if(tindex < test->transactions.size()) {
-      auto& t = test->transactions[tindex++];
-      if(t.kind == 2 && t.size == size && t.addr == address && t.data == (word & mask)) {
-        return;
-      }
-    }
-    error("set ", hex(mode, 3L), " ", hex(address, 8L), " ", hex(word, 8L), " (", hex(test->transactions[tindex - 1].data, 8L), ")\n");
+    return result;
   }
 
   auto run(const TestCase& test, bool logErrors) -> TestResult;
@@ -125,9 +135,11 @@ struct CPU : ares::ARM7TDMI {
 } cpu;
 
 auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
+  const auto& is = test.initial;
+  const auto& fs = test.final;
+
   power(test);
 
-  const auto& is = test.initial;
   processor.r0 = is.R[0];
   processor.r1 = is.R[1];
   processor.r2 = is.R[2];
@@ -167,13 +179,12 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
   processor.und.spsr = is.SPSR[4];
 
   const bool thumb = processor.cpsr.t;
-  const u32 L = thumb ? 2 : 4;
+  const u32 length = thumb ? 2 : 4;
 
   //tests/v1/arm_mrs.json
   //mrs pc,...
   //test seems bugged, should reload pipeline but doesn't...
   if(!thumb && (test.opcode & 0b0000'11111011'0000'1111'0000'1111'0000) == 0b0000'00010000'0000'1111'0000'0000'0000) {
-    //print(hex(test.base_addr, 8L), "  ", hex(test.opcode, 2 * 4), "  ", disassembleInstruction(n32(test.base_addr), boolean(false)), "\n");
     return skip;
   }
 
@@ -219,40 +230,32 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
   //r15 as rn incorrectly reads from +4 offset in test data
   if(!thumb && (test.opcode & 0b00001111101111110000000011110000) == 0b0000'00010'0'001111'00000000'1001'0000) return skip;
 
-  //processor.carry = ?;
-  //processor.irq = ?;
-
   pipeline.reload = false;
-  //pipeline.nonsequential = ?;
+  pipeline.nonsequential = !(is.access & Access::Sequential);
 
   pipeline.decode.address = test.base_addr;
   pipeline.decode.instruction = is.pipeline[0];
   pipeline.decode.thumb = processor.cpsr.t;
   pipeline.decode.irq = !processor.cpsr.i;
 
-  pipeline.fetch.address = test.base_addr + L;
+  pipeline.fetch.address = test.base_addr + length;
   pipeline.fetch.instruction = is.pipeline[1];
 
-  //u32 access;
+  processor.r15.data -= length;
 
-  if(is.access != 2 && is.access != 3) print("is.access ", is.access, "\n");
-  const auto& fs = test.final;
-  if(fs.access != 2 && fs.access != 3) print("fs.access ", fs.access, "\n");
-  if(is.pipeline[0] != test.opcode) print("is.pipeline[0] ", is.pipeline[0], " opcode ", test.opcode, "\n");
-  if(test.base_addr + 2 * L != is.R[15]) print("test.base_addr ", test.base_addr, " opcode ", is.R[15], "\n");
-
-  processor.r15.data -= L;
-  //__debugbreak();
   instruction();
 
-  const bool thumbPost = processor.cpsr.t;
-  const u32 LPost = thumbPost ? 2 : 4;
+  const bool freload = pipeline.reload;
+  const bool fthumb = processor.cpsr.t;
+  const u32 flength = fthumb ? 2 : 4;
 
-  processor.r15.data += LPost;
-  //simulate side effects of pipeline reload on r15
-  if(pipeline.reload) processor.r15.data += LPost;
-  //if(pipeline.reload) processor.r15.data &= ~(LPost - 1);
-  //if(thumb != thumbPost) processor.r15.data &= ~(LPost - 1);
+  if(pipeline.reload) {
+    //todo: confirm if ares should be preserving r15 bit 1 in arm mode
+    u32 r15low = fthumb ? 0 : processor.r15 & 2;
+    reload();
+    processor.r15.data |= r15low;
+  }
+  processor.r15.data += flength;
 
   TestResult result = pass;
 
@@ -286,8 +289,8 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
     result = skip;  //can still fail, but otherwise count as a skip
   }
 
-  //are writes to the lsb of r15 observable under any circumstance?
-  //ares masks it off at the start of the next instruction.
+  //are writes to r15 bit 0 observable under any circumstance?
+  //ares masks it off during pipeline reload
   u32 r15Mask = ~1u;
 
   if(processor.r0 != fs.R[0]) error("r0: ", hex(u32(processor.r0), 8), " != ", hex(fs.R[0], 8));
@@ -327,25 +330,24 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
   if((processor.abt.spsr & cpsrMask) != (fs.SPSR[2] & cpsrMask)) error("abt.spsr: ", hex(u32(processor.abt.spsr), 8), " != ", hex(fs.SPSR[2], 8));
   if((processor.irq.spsr & cpsrMask) != (fs.SPSR[3] & cpsrMask)) error("irq.spsr: ", hex(u32(processor.irq.spsr), 8), " != ", hex(fs.SPSR[3], 8));
   if((processor.und.spsr & cpsrMask) != (fs.SPSR[4] & cpsrMask)) error("und.spsr: ", hex(u32(processor.und.spsr), 8), " != ", hex(fs.SPSR[4], 8));
+  if(pipeline.decode.instruction != fs.pipeline[0]) error("pipeline[0]: ", hex(u32(pipeline.decode.instruction), 8), " != ", hex(fs.pipeline[0], 8));
+  if(pipeline.fetch.instruction != fs.pipeline[1]) error("pipeline[1]: ", hex(u32(pipeline.decode.instruction), 8), " != ", hex(fs.pipeline[1], 8));
+  //todo: fails some tests in arm_data_proc_register_shift, thumb_data_proc that operate on registers
+  //should e.g. asr r4,r4 really change the state to nonsequential?
+  //if(pipeline.nonsequential != !(fs.access & Access::Sequential)) error("nonsequential: ", pipeline.nonsequential, " != ", !(fs.access & Access::Sequential));
 
-  if(!pipeline.reload) {
-    if(pipeline.decode.instruction != fs.pipeline[0]) error("pipeline[0]: ", hex(u32(pipeline.decode.instruction), 8), " != ", hex(fs.pipeline[0], 8));
-    if(pipeline.fetch.instruction != fs.pipeline[1]) error("pipeline[1]: ", hex(u32(pipeline.decode.instruction), 8), " != ", hex(fs.pipeline[1], 8));
-  }
-
-  if(pipeline.reload) tindex += 2;
   if(tindex != test.transactions.size()) {
-    error("unused transactions ", tindex, " ", test.transactions.size(), "\n");
+    error("transactions: ", tindex, " != ", test.transactions.size(), "\n");
   }
 
   if(errors) {
     if(logErrors) {
       print("\n");
       print("test: ", test.index, "\n");
-      print("reload: ", pipeline.reload, "\n");
+      print("reload: ", freload, "\n");
       print("thumb: ", thumb, "\n");
-      print("thumbPost: ", thumbPost, "\n");
-      print(hex(test.base_addr, 8L), "  ", hex(test.opcode, 2 * L), "  ", disassembleInstruction(n32(test.base_addr), boolean(thumb)), "\n");
+      print("fthumb: ", fthumb, "\n");
+      print(hex(test.base_addr, 8L), "  ", hex(test.opcode, 2 * length), "  ", disassembleInstruction(n32(test.base_addr), boolean(thumb)), "\n");
       for(auto& error : errors) {
         print(error, "\n");
       }
@@ -397,23 +399,24 @@ auto fromNode(const nall::Markup::Node& node, TestCase& test) -> void {
   for(auto n : range(transactions.size())) {
     fromNode(transactions[n], test.transactions[n]);
   }
-  node["opcode"].value(test.opcode);
-  node["base_addr"].value(test.base_addr);
-}
-
-auto printResults(const TestResults& results) -> void {
-  print("pass ", results[pass], " / fail ", results[fail], " / skip ", results[skip], "\n");
+  //todo: uncomment when transcode script fix is accepted upstream
+  //node["opcode"].value(test.opcode);
+  //node["base_addr"].value(test.base_addr);
+  test.opcode = test.initial.pipeline[0];
+  const bool thumb = test.initial.CPSR & (1 << 5);
+  const u32 length = thumb ? 2 : 4;
+  test.base_addr = test.initial.R[15] - 2 * length;
 }
 
 template<typename T>
-auto printArray(const char* name, T& arr) -> void {
+auto printArray(string name, const T& arr) -> void {
   print("  ", name, ":\n");
   for(auto x : arr) {
     print("    ", hex(x, 8L), ",\n");
   }
 }
 
-auto printState(const char* name, const TestState& state) -> void {
+auto printState(string name, const TestState& state) -> void {
   print(name, ":\n");
   printArray("R", state.R);
   printArray("R_fiq", state.R_fiq);
@@ -427,7 +430,7 @@ auto printState(const char* name, const TestState& state) -> void {
   print("  access: ", hex(state.access, 8L), "\n");
 }
 
-auto printTest(TestCase& test) -> void {
+auto printTest(const TestCase& test) -> void {
   printState("initial", test.initial);
   printState("final", test.final);
   print("transactions:\n");
@@ -443,6 +446,10 @@ auto printTest(TestCase& test) -> void {
   }
   print("opcode: ", hex(test.opcode, 8L), "\n");
   print("base_addr: ", hex(test.base_addr, 8L), "\n");
+}
+
+auto printResults(const TestResults& results) -> void {
+  print("pass ", results[pass], " / fail ", results[fail], " / skip ", results[skip], "\n");
 }
 
 auto test(string path) -> TestResults {
@@ -462,16 +469,12 @@ auto test(string path) -> TestResults {
     test.index = n;
 
     //printTest(test);
-    //break;
 
     auto result = cpu.run(test, logErrors);
     results[result]++;
     if(result == fail) {
       logErrors = false;  //don't print subsequent failures
-      break;  //todo remove
     }
-
-    //if(n == 0) break;  //todo remove
   }
 
   printResults(results);
