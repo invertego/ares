@@ -132,11 +132,10 @@ auto ARM7TDMI::armInstructionLoadRegister
 
 auto ARM7TDMI::armInstructionMemorySwap
 (n4 m, n4 d, n4 n, n1 byte) -> void {
-  n32 rn = r(n) + (n == 15 ? 4 : 0);  //arm_swp
   n32 rm = r(m) + (m == 15 ? 4 : 0);  //arm_swp
   lock();
-  n32 word = load((byte ? Byte : Word) | Nonsequential, rn);
-  store((byte ? Byte : Word) | Nonsequential, rn, rm);
+  n32 word = load((byte ? Byte : Word) | Nonsequential, r(n));
+  store((byte ? Byte : Word) | Nonsequential, r(n), rm);
   r(d) = word;
   unlock();
 }
@@ -290,7 +289,8 @@ auto ARM7TDMI::armInstructionMoveToStatusFromRegister
 auto ARM7TDMI::armInstructionMultiply
 (n4 m, n4 s, n4 n, n4 d, n1 save, n1 accumulate) -> void {
   if(accumulate) idle();
-  r(d) = MUL(accumulate ? r(n) : 0, r(m), r(s));
+  n32 product = MUL(accumulate ? r(n) : 0, r(m), r(s));
+  if(d != 15) r(d) = product;
 }
 
 auto ARM7TDMI::armInstructionMultiplyLong
@@ -314,13 +314,11 @@ auto ARM7TDMI::armInstructionMultiplyLong
     if(rs >> 24) idle();
   }
 
-  n64 rh = r(h) + (h == 15 ? 4 : 0);  //arm_mull_mlal
-  n64 rl = r(l) + (l == 15 ? 4 : 0);  //arm_mull_mlal
   n64 rd = rm * rs;
-  if(accumulate) rd += rh << 32 | rl << 0;
+  if(accumulate) rd += (n64)r(h) << 32 | (n64)r(l) << 0;
 
-  r(l) = rd >>  0;
-  r(h) = rd >> 32;
+  if(l != 15) r(l) = rd >>  0;
+  if(h != 15) r(h) = rd >> 32;
 
   if(save) {
     cpsr().z = rd == 0;

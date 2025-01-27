@@ -178,20 +178,25 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
   }
 
   //tests/v1/arm_mul_mla.json
-  //r15 tests incorrectly apply +4 offsets to rn, rm, and rs
+  //writes to rd should fail if said register is r15
+  //r15 tests also incorrectly apply +4 offsets to rn, rm, and rs
   //since the multiplier is known to read in the same register(s?) multiple times,
   //this may result in corrupted results on hardware when the lower 8 bits of r15 are 0xfc (needs testing)
   if(!thumb && (test.opcode & 0b00001111110000000000000011110000) == 0b0000'000000'00000000000000'1001'0000) {
+    if((test.opcode & 0x000F0000) == 0x000F0000) return skip;
     if((test.opcode & 0x0000F000) == 0x0000F000) return skip;
     if((test.opcode & 0x00000F00) == 0x00000F00) return skip;
     if((test.opcode & 0x0000000F) == 0x0000000F) return skip;
   }
 
   //tests/v1/arm_mull_mlal.json
-  //r15 tests incorrectly apply +4 offsets to rm and rs
+  //writes to rl and rh should fail if said register is r15
+  //r15 tests also incorrectly apply +4 offsets to rm and rs
   //since the multiplier is known to read in the same register(s?) multiple times,
   //this may result in corrupted results on hardware when the lower 8 bits of r15 are 0xfc (needs testing)
   if(!thumb && (test.opcode & 0b00001111100000000000000011110000) == 0b0000'00001'000000000000000'1001'0000) {
+    if((test.opcode & 0x000F0000) == 0x000F0000) return skip;
+    if((test.opcode & 0x0000F000) == 0x0000F000) return skip;
     if((test.opcode & 0x00000F00) == 0x00000F00) return skip;
     if((test.opcode & 0x0000000F) == 0x0000000F) return skip;
   }
@@ -209,6 +214,10 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
     if((test.opcode & 0x0F000000) == 0x04000000) return skip;
     if((test.opcode & 0x00020000) == 0x00020000) return skip;
   }
+
+  //tests/v1/arm_swp.json
+  //r15 as rn incorrectly reads from +4 offset in test data
+  if(!thumb && (test.opcode & 0b00001111101111110000000011110000) == 0b0000'00010'0'001111'00000000'1001'0000) return skip;
 
   //processor.carry = ?;
   //processor.irq = ?;
