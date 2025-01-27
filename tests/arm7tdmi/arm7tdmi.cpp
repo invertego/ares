@@ -286,6 +286,10 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
     result = skip;  //can still fail, but otherwise count as a skip
   }
 
+  //are writes to the lsb of r15 observable under any circumstance?
+  //ares masks it off at the start of the next instruction.
+  u32 r15Mask = ~1u;
+
   if(processor.r0 != fs.R[0]) error("r0: ", hex(u32(processor.r0), 8), " != ", hex(fs.R[0], 8));
   if(processor.r1 != fs.R[1]) error("r1: ", hex(u32(processor.r1), 8), " != ", hex(fs.R[1], 8));
   if(processor.r2 != fs.R[2]) error("r2: ", hex(u32(processor.r2), 8), " != ", hex(fs.R[2], 8));
@@ -301,7 +305,7 @@ auto CPU::run(const TestCase& test, bool logErrors) -> TestResult {
   if(processor.r12 != fs.R[12]) error("r12: ", hex(u32(processor.r12), 8), " != ", hex(fs.R[12], 8));
   if(processor.r13 != fs.R[13]) error("r13: ", hex(u32(processor.r13), 8), " != ", hex(fs.R[13], 8));
   if(processor.r14 != fs.R[14]) error("r14: ", hex(u32(processor.r14), 8), " != ", hex(fs.R[14], 8));
-  if(processor.r15 != fs.R[15]) error("r15: ", hex(u32(processor.r15), 8), " != ", hex(fs.R[15], 8));
+  if((processor.r15 & r15Mask) != (fs.R[15] & r15Mask)) error("r15: ", hex(u32(processor.r15), 8), " != ", hex(fs.R[15], 8));
   if(processor.fiq.r8 != fs.R_fiq[0]) error("fiq.r8: ", hex(u32(processor.fiq.r8), 8), " != ", hex(fs.R_fiq[0], 8));
   if(processor.fiq.r9 != fs.R_fiq[1]) error("fiq.r9: ", hex(u32(processor.fiq.r9), 8), " != ", hex(fs.R_fiq[1], 8));
   if(processor.fiq.r10 != fs.R_fiq[2]) error("fiq.r10: ", hex(u32(processor.fiq.r10), 8), " != ", hex(fs.R_fiq[2], 8));

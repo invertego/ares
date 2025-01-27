@@ -23,11 +23,10 @@ auto ARM7TDMI::thumbInstructionALU
 
 auto ARM7TDMI::thumbInstructionALUExtended
 (n4 d, n4 m, n2 mode) -> void {
-  //thumb_add_cmp_mov_hi
   switch(mode) {
-  case 0: r(d) = r(d) + r(m); if(d == 15) r(15).data &= ~1; break;  //ADD
+  case 0: r(d) = r(d) + r(m); break;  //ADD
   case 1: SUB(r(d), r(m), 1); break;  //CMP
-  case 2: r(d) = r(m); if(d == 15) r(15).data &= ~1; break;  //MOV
+  case 2: r(d) = r(m); break;  //MOV
   }
 }
 
@@ -67,7 +66,7 @@ auto ARM7TDMI::thumbInstructionBranchExchange
 (n4 m) -> void {
   n32 address = r(m);
   cpsr().t = address.bit(0);
-  r(15) = address & ~1;  //thumb_bx
+  r(15) = address;
 }
 
 auto ARM7TDMI::thumbInstructionBranchFarPrefix
@@ -77,7 +76,7 @@ auto ARM7TDMI::thumbInstructionBranchFarPrefix
 
 auto ARM7TDMI::thumbInstructionBranchFarSuffix
 (n11 displacement) -> void {
-  r(15) = (r(14) + (displacement * 2)) & ~1;  //thumb_bl_suffix
+  r(15) = r(14) + (displacement * 2);
   r(14) = pipeline.decode.address | 1;
 }
 
@@ -231,8 +230,7 @@ auto ARM7TDMI::thumbInstructionStackMultiple
     }
   }
   if(lrpc) {
-    //thumb_push_pop
-    if(mode == 1) r(15) = read(Word | sequential, sp) & ~1;  //POP
+    if(mode == 1) r(15) = read(Word | sequential, sp);  //POP
     if(mode == 0) write(Word | sequential, sp, r(14));  //PUSH
     sp += 4;
   }

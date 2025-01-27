@@ -58,7 +58,7 @@ auto ARM7TDMI::armInstructionBranchExchangeRegister
 (n4 m) -> void {
   n32 address = r(m);
   cpsr().t = address.bit(0);
-  r(15) = address & ~1;  //arm_bx
+  r(15) = address;
 }
 
 auto ARM7TDMI::armInstructionDataImmediate
