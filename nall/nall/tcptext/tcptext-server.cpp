@@ -6,9 +6,7 @@ namespace nall::TCPText {
   }
 
   NALL_HEADER_INLINE auto Server::onData(const vector<u8> &data) -> void {
-    // TODO: revert
-    string dataStr = data;
-    //string_view dataStr((const char*)data.data(), (u32)data.size());
+    string_view dataStr((const char*)data.data(), (u32)data.size());
 
     if(!hadHandshake) {
       hadHandshake = true;

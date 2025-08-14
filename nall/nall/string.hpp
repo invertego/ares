@@ -37,8 +37,7 @@ struct string_view {
   string_view(const string_view& source);
   string_view(string_view&& source);
   string_view(const char* data);
-  // TODO: revert
-  //string_view(const char* data, u32 size);
+  string_view(const char* data, u32 size);
   string_view(const string& source);
 
   auto operator=(const string_view& source) -> type&;

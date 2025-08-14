@@ -24,10 +24,10 @@ inline string_view::string_view(const char* data) {
   _size = -1;  //defer length calculation, as it is often unnecessary
 }
 
-/*inline string_view::string_view(const char* data, u32 size) {
+inline string_view::string_view(const char* data, u32 size) {
   _data = data;
   _size = size;
-}*/
+}
 
 inline string_view::string_view(const string& source) {
   _data = source.data();

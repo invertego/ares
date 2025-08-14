@@ -75,11 +75,8 @@ struct MMI {
       return false;
     }
 
-    // TODO: revert
-    //string_view jsonString{ ((const char*)jsonBuffer.data(), jsonBuffer.size()) };
-    array_view<u8> jsonString = jsonBuffer;
-
-    _mediaInfo = JSON::unserialize(jsonString);
+    auto jsonStringView = string_view((const char*)jsonBuffer.data(), jsonBuffer.size());
+    _mediaInfo = JSON::unserialize(jsonStringView);
     if(!_mediaInfo) {
       close();
       return false;
