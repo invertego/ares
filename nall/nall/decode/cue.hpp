@@ -59,7 +59,10 @@ inline auto CUE::load(const string& location, const Decode::ZIP* archive, const 
       archiveFolder = compressedFile->name.slice(0, fileNameSeparatorPos.get() + 1);
     }
     auto rawDataBuffer = archive->extract(*compressedFile);
-    lines = string(string_view((const char*)rawDataBuffer.data(), rawDataBuffer.size())).replace("\r", "").split("\n");
+    // TODO: revert
+    array_view<u8> rawDataView = rawDataBuffer;
+    lines = string(rawDataView).replace("\r", "").split("\n");
+    //lines = string(string_view((const char*)rawDataBuffer.data(), rawDataBuffer.size())).replace("\r", "").split("\n");
   } else {
     lines = string::read(location).replace("\r", "").split("\n");
   }

@@ -75,10 +75,9 @@ struct MMI {
       return false;
     }
 
-    auto jsonString = string((const char*)jsonBuffer.data(), jsonBuffer.size());
-    //FIXME: Why is jsonString larger than the input data size when creating from the buffer?
-    //HACK: prevent JSON::unserialize from failing due to tailing data
-    if(jsonString.length() > jsonBuffer.size()) jsonString = jsonString.slice(0, jsonBuffer.size());
+    // TODO: revert
+    //string_view jsonString{ ((const char*)jsonBuffer.data(), jsonBuffer.size()) };
+    array_view<u8> jsonString = jsonBuffer;
 
     _mediaInfo = JSON::unserialize(jsonString);
     if(!_mediaInfo) {
